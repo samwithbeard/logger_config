@@ -1,15 +1,71 @@
-default_mapping = {
-    'counter': {'position': 0, 'type': '8bit'},
-    'time': {'position': 11, 'type': 'float_time'},
-    'error_rate_rad': {'position': 135, 'type': 'alstom_float'},
-    'status1_rad': {'position': 124, 'type': '8bit'},
-    'speed': {'position': 125, 'type': 'float', 'size': 2, 'faktor': 0.01},
-    'speed_b15': {'position': 15, 'type': 'float', 'size': 1, 'faktor': 10},
-    'speed_b69': {'position': 69, 'type': 'float', 'size': 1, 'faktor': 10},
-    'speed_b165_166': {'position': 165, 'type': 'float', 'size': 2, 'faktor': 0.1},
-    'speed_upper_b168': {'position': 168, 'type': 'float', 'size': 1, 'faktor': 10},
-    'speed_lower_b170': {'position': 170, 'type': 'float', 'size': 1, 'faktor': 10},
-    'sig_b19_20': {'position': 19, 'type': 'float', 'size': 2, 'faktor': 0.1},
-    'sig_171': {'position': 171, 'type': 'float', 'faktor': 10},
-    'dist': {'position': 127, 'type': '16bit', 'divisor': 10}
+{
+    "counter": {
+        "position": 0,
+        "type": "8bit"
+    },
+    "time": {
+        "position": 11,
+        "type": "float_time"
+    },
+    "error_rate_rad": {
+        "position": 135,
+        "type": "alstom_float"
+    },
+    "status1_rad": {
+        "position": 124,
+        "type": "8bit"
+    },
+    "speed": {
+        "position": 125,
+        "type": "float",
+        "size": 2,
+        "faktor": 0.01
+    },
+    "speed_b15": {
+        "position": 15,
+        "type": "float",
+        "size": 1,
+        "faktor": 10
+    },
+    "speed_b69": {
+        "position": 69,
+        "type": "float",
+        "size": 1,
+        "faktor": 10
+    },
+    "speed_b165_166": {
+        "position": 165,
+        "type": "float",
+        "size": 2,
+        "faktor": 0.1
+    },
+    "speed_upper_b168": {
+        "position": 168,
+        "type": "float",
+        "size": 1,
+        "faktor": 10
+    },
+    "speed_lower_b170": {
+        "position": 170,
+        "type": "float",
+        "size": 1,
+        "faktor": 10
+    },
+    "sig_b19_20": {
+        "position": 19,
+        "type": "float",
+        "size": 2,
+        "faktor": 0.1
+    },
+    "sig_171": {
+        "position": 171,
+        "type": "float",
+        "faktor": 10
+    },
+    "dist": {
+        "position": 127,
+        "type": "16bit",
+        "divisor": 10
+    }
 }
+
