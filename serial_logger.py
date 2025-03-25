@@ -151,8 +151,15 @@ except:
     print("no vehicle id in config file")
     UIC_VehicleID="94856500666"
 
-# Generiere eine zufällige UUID
-my_uuid = uuid.uuid1()
+def get_mac_address():
+    mac = uuid.getnode()
+    mac_address = ':'.join(f'{(mac >> i) & 0xff:02x}' for i in range(0, 8 * 6, 8))[::-1]
+    return mac_address
+
+my_uuid = get_mac_address()
+print(f"MAC Address: {my_uuid}")
+
+
 print("UUID: " + str(my_uuid))
 # Load vehicle_list.json and check for vehicle_id matching my_uuid
 vehicle_list_path = os.path.join(os.path.dirname(__file__), 'config', 'vehicle_list.json')
@@ -160,15 +167,17 @@ vehicle_list_path = os.path.join(os.path.dirname(__file__), 'config', 'vehicle_l
 try:
     with open(vehicle_list_path, 'r') as file:
         vehicle_list = json.load(file)
-    
+    print(vehicle_list)
     # Check if my_uuid exists in the vehicle_list
     for vehicle in vehicle_list.get('vehicles', []):
+        print(vehicle.get('device_uuid')+ " "+str(my_uuid)+" "+str(vehicle.get('device_uuid') == str(my_uuid)))
         if vehicle.get('device_uuid') == str(my_uuid):
-            UIC_VehicleID = vehicle.get('vehicle_id', UIC_VehicleID)  # Assign the id if found
+            UIC_VehicleID = vehicle.get('vehicle_id')  # Assign the id if found
             print(f"Vehicle ID found: {UIC_VehicleID}")
             break
     else:
         print(f"No matching vehicle_id found for UUID: {my_uuid}")
+        print(f"assigned Vehicle ID: {UIC_VehicleID}")
 except FileNotFoundError:
     print(f"Vehicle list file not found at {vehicle_list_path}")
 except json.JSONDecodeError as e:
