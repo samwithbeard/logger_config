@@ -1,14 +1,12 @@
 {
-    "lookup_table": {
-        "00:1A:2B:3C:4D:5E": "vehicle_001",
-        "00:1A:2B:3C:4D:5F": "vehicle_002",
-        "00:1A:2B:3C:4D:60": "vehicle_003",
-        "00:1A:2B:3C:4D:61": "vehicle_004",
-        "00:1A:2B:3C:4D:62": "vehicle_005",
-        "00:1A:2B:3C:4D:63": "vehicle_006",
-        "00:1A:2B:3C:4D:64": "vehicle_007",
-        "00:1A:2B:3C:4D:65": "vehicle_008",
-        "00:1A:2B:3C:4D:66": "vehicle_009",
-        "00:1A:2B:3C:4D:67": "vehicle_010"
-    }
+    "vehicles": [
+        {
+            "device_uuid": "123e4567-e89b-12d3-a456-426614174000",
+            "vehicle_id": "94856500666"
+        },
+        {
+            "device_uuid": "ba0cb445-0975-11f0-b1ef-3c219cbbb1eb",
+            "vehicle_id": "94856500667"
+        }
+    ]
 }
