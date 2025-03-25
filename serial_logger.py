@@ -21,7 +21,7 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-print("v6")
+print("v7")
 logging_active=False
 startup_sleep=0
 print("wait "+str(startup_sleep)+"s for startup..")
