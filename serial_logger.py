@@ -21,7 +21,7 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-version="1.0.0"
+version="0.0.1"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -550,7 +550,7 @@ def create_JSON_object(timestamp,UIC_VehicleID,cpu_temp,max_speed,position="",so
             {
                 "vehicleUIC": UIC_VehicleID,
                 "vehicleType": "ICN",
-                "specification": "Spec001",
+                "specification": version,
                 "time": timestamp,
                 "operationalStatus": "simulated",
                 "data": [
@@ -592,7 +592,7 @@ def create_raw_JSON_object(timestamp,UIC_VehicleID,raw_data,position="",source="
             {
                 "vehicleUIC": UIC_VehicleID,
                 "vehicleType": "ICN",
-                "specification": "Spec001",
+                "specification": version,
                 "time": timestamp,
                 "operationalStatus": "simulated",
                 "data": [
