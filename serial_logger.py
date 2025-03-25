@@ -23,7 +23,7 @@ from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
 
 logging_active=False
-startup_sleep=1
+startup_sleep=0
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
 # Function to load the JSON schema from a local file
