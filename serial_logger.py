@@ -21,9 +21,10 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-print("v7")
+version="1.0.0"
+print(version)
 logging_active=False
-startup_sleep=0
+startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
 # Function to load the JSON schema from a local file
