@@ -22,7 +22,7 @@ from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
 
-logging_active=True
+logging_active=False
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
@@ -735,7 +735,7 @@ try:
                             with open(data_path+"\\hex_telegram.txt", 'a') as file:
                                 file.write(telegram_hex+"\n")  
                             with open(data_path+"\\raw_telegram.txt", 'a') as file:
-                                file.write(telegram_raw+"\n")  
+                                file.write(str(telegram_raw)+"\n")  
 
                     ICN_Separator = "1b0244"
                     pattern = r'(?=.{10}' + ICN_Separator + r')' #ff1a551b031b02440009b5
