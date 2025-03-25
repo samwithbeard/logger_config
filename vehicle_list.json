@@ -1,11 +1,11 @@
 {
     "vehicles": [
         {
-            "device_uuid": "1ccbfe42-0977-11f0-abb2-f6a027c97e18",
-            "vehicle_id": "94856500666"
+            "device_uuid": "6f:0a:72:9c:e7:81",
+            "vehicle_id": "94856500668"
         },
         {
-            "device_uuid": "ba0cb445-0975-11f0-b1ef-3c219cbbb1eb",
+            "device_uuid": "c3:12:c9:bb:1b:be",
             "vehicle_id": "94856500667"
         }
     ]
