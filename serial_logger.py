@@ -139,10 +139,10 @@ public_config_path = os.path.join(os.path.dirname(__file__), 'config','public_co
 public_config_file = os.path.normpath(public_config_path)
 print("config path "+public_config_file)
 config_p.read(public_config_file)
-conf_dbr_odo = config_p.get('recording', 'dbr_odo')
-conf_min_time_odo = config_p.get('recording', 'min_time_odo')
-conf_min_time_novram = config_p.get('recording', 'min_time_novram')
-conf_status_period = config_p.get('recording', 'status_period')
+conf_dbr_odo = float(config_p.get('recording', 'dbr_odo'))
+conf_min_time_odo = float(config_p.get('recording', 'min_time_odo'))
+conf_min_time_novram = float(config_p.get('recording', 'min_time_novram'))
+conf_status_period = float(config_p.get('recording', 'status_period'))
 #uic range 94856500666 - 94856500669        
 #uuid       
 try:
@@ -178,6 +178,7 @@ try:
     else:
         print(f"No matching vehicle_id found for UUID: {my_uuid}")
         print(f"assigned Vehicle ID: {UIC_VehicleID}")
+        time.sleep(5)
 except FileNotFoundError:
     print(f"Vehicle list file not found at {vehicle_list_path}")
 except json.JSONDecodeError as e:
