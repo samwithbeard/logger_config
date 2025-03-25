@@ -21,7 +21,7 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-version="0.0.2"
+version="0.0.3"
 print(version)
 logging_active=False
 startup_sleep=1
