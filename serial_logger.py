@@ -21,7 +21,7 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-version="0.0.1"
+version="0.0.2"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -133,6 +133,16 @@ mqtt_broker_intern = config.get('credentials', 'mqtt_broker_intern')
 mqtt_broker_outside = config.get('credentials', 'mqtt_broker_outside')
 sim_pin = config.get('credentials', 'sim_pin')
 
+# read public Configuration parameter
+config_p = ConfigParser()
+public_config_path = os.path.join(os.path.dirname(__file__), 'config','public_config.ini')
+public_config_file = os.path.normpath(public_config_path)
+print("config path "+public_config_file)
+config_p.read(public_config_file)
+conf_dbr_odo = config_p.get('recording', 'dbr_odo')
+conf_min_time_odo = config_p.get('recording', 'min_time_odo')
+conf_min_time_novram = config_p.get('recording', 'min_time_novram')
+conf_status_period = config_p.get('recording', 'status_period')
 #uic range 94856500666 - 94856500669        
 #uuid       
 try:
@@ -143,7 +153,28 @@ except:
 
 # Generiere eine zufällige UUID
 my_uuid = uuid.uuid1()
+print("UUID: " + str(my_uuid))
+# Load vehicle_list.json and check for vehicle_id matching my_uuid
+vehicle_list_path = os.path.join(os.path.dirname(__file__), 'config', 'vehicle_list.json')
 
+try:
+    with open(vehicle_list_path, 'r') as file:
+        vehicle_list = json.load(file)
+    
+    # Check if my_uuid exists in the vehicle_list
+    for vehicle in vehicle_list.get('vehicles', []):
+        if vehicle.get('device_uuid') == str(my_uuid):
+            UIC_VehicleID = vehicle.get('vehicle_id', UIC_VehicleID)  # Assign the id if found
+            print(f"Vehicle ID found: {UIC_VehicleID}")
+            break
+    else:
+        print(f"No matching vehicle_id found for UUID: {my_uuid}")
+except FileNotFoundError:
+    print(f"Vehicle list file not found at {vehicle_list_path}")
+except json.JSONDecodeError as e:
+    print(f"Error decoding JSON file: {e}")
+except Exception as e:
+    print(f"An error occurred while loading the vehicle list: {e}")
 # MQTT Configuration
 
 mqtt_port_outside = 8885               #8885
@@ -707,7 +738,7 @@ try:
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
 
 
-                if time.time() - last_basic_message_time >= 10:
+                if time.time() - last_basic_message_time >= conf_status_period:
                     send_json_message(mqtt_topic_publish, message)
                     last_basic_message_time = time.time()#basic message without serial
                 
@@ -773,8 +804,8 @@ try:
                             message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
                             message = add_odo_frame(message, parsed_frame)
 
-                            deviation_to_send = 0.5  # only send message if speed changes more than 0.5 km/h
-                            time_threshold = 3  # time threshold in seconds
+                            deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
+                            time_threshold = conf_min_time_odo  # time threshold in seconds
                             speed = float(parsed_frame['speed'])
                             current_time = time.time()
                             if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
@@ -839,7 +870,7 @@ try:
                             if logging_active:
                                 with open( data_path+"output.txt", 'a') as file:
                                     file.write(message)
-                            if time.time() - last_novram_message_time >= 0.001:
+                            if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),"NOVRAM")
                                 send_json_message(mqtt_topic_publish, message)
                                 last_novram_message_time = time.time()#basic message without serial
