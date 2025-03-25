@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import hashlib
 import serial
 import serial.tools.list_ports
