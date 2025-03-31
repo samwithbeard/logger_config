@@ -21,13 +21,76 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
-version="0.0.3"
+if os.name == 'posix':  # Check if the operating system is Linux
+    from gpiozero import LED
+
+else:
+    
+    print("gpiozero is not supported on Windows. Skipping GPIO setup.")
+    # Define a simulated LED class for Windows or systems without gpiozero
+    class SimulatedLED:
+        def __init__(self, pin):
+            self.pin = pin
+            self._state = False
+
+        def on(self):
+            self._state = True
+            print(f"Simulated LED on pin {self.pin} is ON")
+
+        def off(self):
+            self._state = False
+            print(f"Simulated LED on pin {self.pin} is OFF")
+
+        @property
+        def is_lit(self):
+            return self._state
+
+    # Assign the simulated LED to the LED variable
+    LED = SimulatedLED
+
+    # Define a simulated LED
+    class SimulatedLED:
+        def __init__(self, pin):
+            self.pin = pin
+            self._state = False
+
+        def on(self):
+            self._state = True
+            print(f"Simulated LED on pin {self.pin} is ON")
+
+        def off(self):
+            self._state = False
+            print(f"Simulated LED on pin {self.pin} is OFF")
+
+        @property
+        def is_lit(self):
+            return self._state
+
+    # Assign the simulated LED to the LED variable
+    LED = SimulatedLED
+led = LED(6)
+led.off()
+
+
+version="0.0.4"
 print(version)
 logging_active=False
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
+led.on()
+def toggle_led():
+    """
+    Toggle the state of the LED depending on its current state.
+    """
+    if led.is_lit:
+        led.off()
+        print("LED is turned OFF")
+    else:
+        led.on()
+        print("LED is turned ON")
 # Function to load the JSON schema from a local file
+
 def load_json_schema(file_path):
     with open(file_path, 'r') as file:
         schema = json.load(file)
@@ -79,33 +142,6 @@ try:
 except:
     logging.basicConfig(filename='serial_logger.log', level=logging.DEBUG)
 
-class GPIOSimulator:
-    def __init__(self):
-        self._button_state = False
-        self._led_state = False
-
-    def button(self, pin, bounce_time=None):
-        return self
-
-    def when_pressed(self, callback):
-        pass
-
-    def led(self, pin):
-        return self
-
-    def on(self):
-        self._led_state = True
-
-    def off(self):
-        self._led_state = False
-
-    @property
-    def value(self):
-        return self._button_state
-
-    @value.setter
-    def value(self, state):
-        self._button_state = state
 
 try:
     def print_file_md5():
@@ -391,6 +427,8 @@ def send_json_message(topic, json_message):
         print("send "+str(message))
     except Exception as e:
         print("fail to send "+str(message) + str(e))
+    
+    toggle_led()
 
 def send_text_message(topic, message):
     try:        
@@ -915,4 +953,8 @@ finally:
     if os.name != 'nt':
         gps_process.terminate()
         gps_process.join()
+    
+    led.off()
+    for ser in sers:
+        ser.close() 
     print("bye..")
