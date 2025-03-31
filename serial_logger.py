@@ -89,7 +89,50 @@ def toggle_led():
     else:
         led.on()
         print("LED is turned ON")
+
+def toggle_flicker_led():
+    """
+    Toggle the state of the LED depending on its current state.
+    """
+    if led.is_lit:
+        led.off()
+        time.sleep(0.1)  # Wait for 0.1 seconds
+        led.on()
+        time.sleep(0.1)  # Wait for 0.1 seconds
+        led.off()
+        print("LED is turned OFF")
+    else:
+        led.on()
+        time.sleep(0.1)  # Wait for 0.1 seconds
+        led.off()
+        time.sleep(0.1)  # Wait for 0.1 seconds
+        led.on()
+        print("LED is turned ON")
 # Function to load the JSON schema from a local file
+
+def flicker_led(n=1):
+    """
+    Toggle the state of the LED depending on its current state.
+    """
+    i=0
+    if led.is_lit:
+        while i<=n:
+            led.off()
+            time.sleep(0.05)  # Wait for 0.1 seconds
+            led.on()
+            i+=1
+        
+        print("LED is turned ON")
+    else:
+        while i<=n:
+            led.on()
+            time.sleep(0.05)  # Wait for 0.1 seconds
+            led.off()
+            i+=1
+        print("LED is turned OFF")
+    time.sleep(0.1)
+# Function to load the JSON schema from a local file
+flicker_led(1)
 
 def load_json_schema(file_path):
     with open(file_path, 'r') as file:
@@ -210,11 +253,13 @@ try:
         if vehicle.get('device_uuid') == str(my_uuid):
             UIC_VehicleID = vehicle.get('vehicle_id')  # Assign the id if found
             print(f"Vehicle ID found: {UIC_VehicleID}")
+            flicker_led(1)
             break
     else:
         print(f"No matching vehicle_id found for UUID: {my_uuid}")
         print(f"assigned Vehicle ID: {UIC_VehicleID}")
-        time.sleep(5)
+        flicker_led(6)
+        
 except FileNotFoundError:
     print(f"Vehicle list file not found at {vehicle_list_path}")
 except json.JSONDecodeError as e:
@@ -245,6 +290,7 @@ mqtt_pem_file_outside = os.path.normpath(mqtt_pem_file_outside)
 #SBB signed	8883, 8886	SBB-CL-B-Issuing-CA.pem	                27.09.2027
 #SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
 intern=False
+
 def check_network_registration(serial_port, baud_rate="115200", timeout=30):
     """
     Check if the module is registered on the network.
@@ -354,18 +400,23 @@ def enter_sim_pin(serial_port,sim_pin):
 if os.name == 'nt':
     print("Windows OS detected. Skipping 4G module startup check.")
 else:
+    
     modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
     print("Serial port 4")
-    ready_4G= check_4G_startup(modem_port)
+    flicker_led(2)
+    ready_4G= check_4G_startup(modem_port)    
     print("wait for 4G to be ready..")
+    flicker_led(3)
     while  not ready_4G:
         ready_4G= check_4G_startup(modem_port)
+        flicker_led(4)
         time.sleep(1)
+        
     print("check PIN")
     enter_sim_pin(modem_port, sim_pin)
-
+    flicker_led(5)
     registerd = check_network_registration(modem_port)
-
+    flicker_led(6)
 if intern:
     MQTT_BROKER=mqtt_broker_intern
 else:
@@ -393,6 +444,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connection Return code:", rc)
     if rc == 0:
         print("Connected to MQTT broker successfully.")
+        flicker_led(10)
         #client.subscribe(mqtt_topic_subscribe)
     elif rc == 1:
         print("Connection refused: incorrect protocol version.")
@@ -443,7 +495,7 @@ def wait_till_online(n_max=100000):
     while waiting:
         counter =0
         t=1000
-        toggle_led() 
+        toggle_flicker_led() 
         try:
             if os.name == 'nt':
                 print("ping failed (only possible on linux)")
