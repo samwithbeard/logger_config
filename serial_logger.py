@@ -443,18 +443,21 @@ def wait_till_online(n_max=100000):
     while waiting:
         counter =0
         t=1000
+        toggle_led() 
         try:
             if os.name == 'nt':
                 print("ping failed (only possible on linux)")
                 waiting=False
                 t=0
-            else:    
+            else:  
+                
                 t = os.system('ping -c 1 8.8.8.8')
-
+                
         except Exception as e:
             print("ping failed (only possible on linux)"+str(e))
             waiting=False
             t=0
+           
         if t < 1:
             waiting=False
             print("internet available")
@@ -463,6 +466,7 @@ def wait_till_online(n_max=100000):
             time.sleep(1) #wait between two pings only relevant during startup
             if counter == n_max: # this will prevent an never ending loop, set to the number of tries you think it will require
                 waiting = False
+    led.on()
 
 wait_till_online(n_max=100000)
 
