@@ -409,7 +409,7 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         ser = serial.Serial(serial_port, baudrate=baud_rate, timeout=1)
         ser.write(b'AT+CSQ\r\n')  # Send the AT+CSQ command
         response = ser.read(100).decode().strip()
-        print("AT+CSQ Response:", response)
+        #print("AT+CSQ Response:", response)
 
         if "+CSQ:" in response:
             # Extract the signal strength and quality values
@@ -878,7 +878,7 @@ try:
                 if time.time() - last_basic_message_time >= conf_status_period:
                     if os.name != 'nt':
                         signal_strength, signal_quality=get_signal_quality(modem_port)
-                        print("Signal quality: ", signal_quality)
+                        
                     else:
                         signal_strength, signal_quality=(-1, -2)
                     message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
