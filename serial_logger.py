@@ -74,8 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-
-version="0.0.4"
+version="0.0.5"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -233,6 +232,27 @@ except:
     print("no vehicle id in config file")
     UIC_VehicleID="94856500666"
 
+def get_speed_from_nmea(nmea_sentence):
+        parts = nmea_sentence.split(',')
+        if parts[0] == '$GPRMC' and parts[2] == 'A':
+            try:
+                speed_knots = float(parts[7])  # Speed over ground in knots
+                speed_kmh = speed_knots * 1.852  # Convert knots to km/h
+                return speed_kmh
+            except (ValueError, IndexError):
+                print("Error parsing speed from NMEA sentence.")
+                return None
+        else:
+            return None
+        
+def update_data(self, message):
+    try:
+        msg = json.loads(message)
+    except json.JSONDecodeError as e:
+        print(f"JSON decode error: {e}")
+        print(f"Message payload: {message}")
+        return
+        
 def get_disk_serial_number():
     if os.name == 'nt':  # Windows
         try:
@@ -829,6 +849,8 @@ else:
     gps_process.start()
 
 gps_data=""
+gps_speed=0
+last_gps_speed=0
 last_speed=0
 last_message_time=0
 last_basic_message_time=0
@@ -836,6 +858,9 @@ last_ex_message_time=0
 last_odo_message_time=0
 last_novram_message_time=0
 skipped_message = 0
+deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
+time_threshold = conf_min_time_odo  # time threshold in seconds
+                            
 
 # flush serial buffer on startup
 print("flushing serial buffer..")
@@ -879,6 +904,7 @@ try:
 
                     if not position_queue.empty():
                         gps_data = position_queue.get()
+                        gps_speed = get_speed_from_nmea(gps_data)
                         #print("Received GPS data in main script:")
                         #print(gps_data)
                         #time.sleep(2)
@@ -887,9 +913,10 @@ try:
                     
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
+                message=add_element(message, "gps_speed", "GPS Speed", gps_speed)                  
 
-
-                if time.time() - last_basic_message_time >= conf_status_period:
+                if abs(gps_speed - last_gps_speed) > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
+                    last_gps_speed = gps_speed
                     if os.name != 'nt':
                         signal_strength, signal_quality=get_signal_quality(modem_port)
                         
@@ -962,8 +989,6 @@ try:
                             message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
                             message = add_odo_frame(message, parsed_frame)
 
-                            deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
-                            time_threshold = conf_min_time_odo  # time threshold in seconds
                             speed = float(parsed_frame['speed'])
                             current_time = time.time()
                             if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
