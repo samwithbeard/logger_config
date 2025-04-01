@@ -21,8 +21,11 @@ import requests
 from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
+import subprocess
+
 if os.name == 'posix':  # Check if the operating system is Linux
     from gpiozero import LED
+
 
 else:
     
@@ -230,14 +233,25 @@ except:
     print("no vehicle id in config file")
     UIC_VehicleID="94856500666"
 
-def get_mac_address():
-    mac = uuid.getnode()
-    mac_address = ':'.join(f'{(mac >> i) & 0xff:02x}' for i in range(0, 8 * 6, 8))[::-1]
-    return mac_address
+def get_disk_serial_number():
+    if os.name == 'nt':  # Windows
+        try:
+            result = subprocess.check_output("wmic diskdrive get SerialNumber", shell=True)
+            serial_number = result.decode().split("\n")[1].strip()
+            return serial_number
+        except Exception as e:
+            print(f"Error retrieving disk serial number: {e}")
+            return None
+    else:  # Linux/Unix
+        try:
+            result = os.popen("lsblk -o SERIAL").read().split("\n")
+            serial_number = result[1].strip() if len(result) > 1 else None
+            return serial_number
+        except Exception as e:
+            print(f"Error retrieving disk serial number: {e}")
+            return None
 
-my_uuid = get_mac_address()
-print(f"MAC Address: {my_uuid}")
-
+my_uuid = get_disk_serial_number()
 
 print("UUID: " + str(my_uuid))
 # Load vehicle_list.json and check for vehicle_id matching my_uuid
@@ -409,7 +423,7 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         ser = serial.Serial(serial_port, baudrate=baud_rate, timeout=1)
         ser.write(b'AT+CSQ\r\n')  # Send the AT+CSQ command
         response = ser.read(100).decode().strip()
-        #print("AT+CSQ Response:", response)
+        print("AT+CSQ Response:", response)
 
         if "+CSQ:" in response:
             # Extract the signal strength and quality values
@@ -1051,6 +1065,13 @@ finally:
         gps_process.join()
     
     led.off()
+    # Cleanup GPIO resources
+    if os.name == 'posix':  # Only perform GPIO cleanup on Linux
+        try:
+            led.off()  # Ensure the LED is turned off
+            print("GPIO resources cleaned up.")
+        except Exception as e:
+            print(f"Error during GPIO cleanup: {e}")
     for ser in sers:
         ser.close() 
     print("bye..")
