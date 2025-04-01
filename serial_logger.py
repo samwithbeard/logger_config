@@ -397,6 +397,37 @@ def enter_sim_pin(serial_port,sim_pin):
     except Exception as e:
         print("Error:", e)
         return False
+def get_signal_quality(serial_port, baud_rate="115200"):
+    """
+    Function to get the signal quality using the AT+CSQ command.
+
+    :param serial_port: The serial port where the module is connected (e.g., '/dev/ttyS0' or 'COM3').
+    :param baud_rate: The baud rate for communication (e.g., 115200).
+    :return: A tuple (signal_strength, signal_quality) or None if the command fails.
+    """
+    try:
+        ser = serial.Serial(serial_port, baudrate=baud_rate, timeout=1)
+        ser.write(b'AT+CSQ\r\n')  # Send the AT+CSQ command
+        response = ser.read(100).decode().strip()
+        print("AT+CSQ Response:", response)
+
+        if "+CSQ:" in response:
+            # Extract the signal strength and quality values
+            match = re.search(r"\+CSQ: (\d+),(\d+)", response)
+            if match:
+                signal_strength = int(match.group(1))
+                signal_quality = int(match.group(2))
+                ser.close()
+                return signal_strength, signal_quality
+
+        ser.close()
+        print("Failed to retrieve signal quality.")
+        return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
+
 if os.name == 'nt':
     print("Windows OS detected. Skipping 4G module startup check.")
 else:
@@ -837,12 +868,21 @@ try:
                         #print("Received GPS data in main script:")
                         #print(gps_data)
                         #time.sleep(2)
+                        
+
                     
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
 
 
                 if time.time() - last_basic_message_time >= conf_status_period:
+                    if os.name != 'nt':
+                        signal_strength, signal_quality=get_signal_quality(modem_port)
+                        print("Signal quality: ", signal_quality)
+                    else:
+                        signal_strength, signal_quality=(-1, -2)
+                    message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
+                    message=add_element(message, "signal_quality", "Signal Quality", signal_quality)
                     send_json_message(mqtt_topic_publish, message)
                     last_basic_message_time = time.time()#basic message without serial
                 
