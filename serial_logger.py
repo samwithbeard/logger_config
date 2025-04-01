@@ -462,26 +462,90 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         print("Error:", e)
         return None
 
-if os.name == 'nt':
-    print("Windows OS detected. Skipping 4G module startup check.")
-else:
-    
-    modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
-    print("Serial port 4")
-    flicker_led(2)
-    ready_4G= check_4G_startup(modem_port)    
-    print("wait for 4G to be ready..")
-    flicker_led(3)
-    while  not ready_4G:
-        ready_4G= check_4G_startup(modem_port)
-        flicker_led(4)
-        time.sleep(1)
+def Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
+    if os.name == 'nt':
+        print("Windows OS detected. Skipping 4G module startup check.")
+    else:
+        modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+        print("Serial port 4")
+        flicker_led(2)
+        ready_4G= check_4G_startup(modem_port)    
+        print("wait for 4G to be ready..")
+        flicker_led(3)
+        while  not ready_4G:
+            ready_4G= check_4G_startup(modem_port)
+            flicker_led(4)
+            time.sleep(1)
         
-    print("check PIN")
-    enter_sim_pin(modem_port, sim_pin)
-    flicker_led(5)
-    registerd = check_network_registration(modem_port)
-    flicker_led(6)
+        print("check PIN")
+        enter_sim_pin(modem_port, sim_pin)
+        flicker_led(5)
+        registerd = check_network_registration(modem_port)
+        flicker_led(6)
+
+Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
+def is_modem_connected(serial_port="", baud_rate="115200"):
+    """
+    Check if the modem is connected and responding to AT commands.
+
+    :param serial_port: The serial port where the modem is connected.
+    :param baud_rate: The baud rate for communication.
+    :return: True if the modem is connected, False otherwise.
+    """
+    if os.name == 'nt':
+        print("Windows OS detected. Skipping 4G module startup check.")
+    else:
+        serial_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+
+    try:
+        ser = serial.Serial(serial_port, baudrate=baud_rate, timeout=1)
+        ser.write(b'AT\r\n')  # Send basic AT command
+        response = ser.read(100).decode().strip()
+        ser.close()
+        if "OK" in response:
+            print("Modem is connected and responding.")
+            return True
+        else:
+            print("Modem is not responding.")
+            return False
+    except Exception as e:
+        print(f"Error checking modem connection: {e}")
+        return False
+
+
+def reconnect_modem(sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
+    """
+    Attempt to reconnect the modem by reinitializing it.
+
+    :param serial_port: The serial port where the modem is connected.
+    :param sim_pin: The SIM PIN for the modem.
+    :param check_network_registration: Function to check network registration.
+    :param check_4G_startup: Function to check if the modem has started up.
+    :param enter_sim_pin: Function to enter the SIM PIN.
+    """
+    if os.name == 'nt':
+        print("Windows OS detected. Skipping 4G module startup check.")
+    else:
+        serial_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+
+    print("Attempting to reconnect the modem...")
+    if not check_4G_startup(serial_port):
+        print("Modem startup failed. Retrying...")
+        time.sleep(5)
+        return reconnect_modem(serial_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
+
+    if not enter_sim_pin(serial_port, sim_pin):
+        print("Failed to enter SIM PIN. Retrying...")
+        time.sleep(5)
+        return reconnect_modem(serial_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
+
+    if not check_network_registration(serial_port):
+        print("Network registration failed. Retrying...")
+        time.sleep(5)
+        return reconnect_modem(serial_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
+
+    print("Modem reconnected successfully.")
+
 if intern:
     MQTT_BROKER=mqtt_broker_intern
 else:
@@ -908,6 +972,11 @@ try:
                         #print("Received GPS data in main script:")
                         #print(gps_data)
                         #time.sleep(2)
+                    if not is_modem_connected():
+                        print("Modem not connected. Attempting to reconnect...")
+                        # Attempt to reconnect the modem
+                        reconnect_modem(sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)   
+                    
                         
 
                     
