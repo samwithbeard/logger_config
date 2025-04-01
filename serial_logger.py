@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.6"
+version="0.0.7"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -983,8 +983,8 @@ try:
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
                 message=add_element(message, "gps_speed", "GPS Speed", gps_speed)                  
-
-                if abs(gps_speed - last_gps_speed) > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
+                v_diff=abs(float(gps_speed) - float(last_gps_speed)) if isinstance(gps_speed, (int, float)) and isinstance(last_gps_speed, (int, float)) else 0
+                if v_diff > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
                     last_gps_speed = gps_speed
                     if os.name != 'nt':
                         signal_strength, signal_quality=get_signal_quality(modem_port)
