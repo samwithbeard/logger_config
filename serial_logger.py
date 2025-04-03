@@ -324,6 +324,11 @@ mqtt_pem_file_outside = os.path.normpath(mqtt_pem_file_outside)
 #SBB signed	8883, 8886	SBB-CL-B-Issuing-CA.pem	                27.09.2027
 #SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
 intern=False
+if os.name == 'nt':
+        print("Windows OS detected. Skipping 4G module startup check.")
+else:
+        modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+
 
 def check_network_registration(serial_port, baud_rate="115200", timeout=30):
     """
@@ -462,11 +467,11 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         print("Error:", e)
         return (-2,-2)
 
-def Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
+def Setup4G(modem_port, flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
     if os.name == 'nt':
         print("Windows OS detected. Skipping 4G module startup check.")
     else:
-        modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+            
         print("Serial port 4")
         flicker_led(2)
         ready_4G= check_4G_startup(modem_port)    
@@ -482,10 +487,7 @@ def Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, 
         flicker_led(5)
         registerd = check_network_registration(modem_port)
         flicker_led(6)
-if os.name == 'nt':
-        print("Windows OS detected. Skipping 4G module startup check.")
-else:
-        modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+
 
 Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
 def is_modem_connected(serial_port="", baud_rate="115200"):
