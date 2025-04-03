@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.9"
+version="0.0.10"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -456,11 +456,11 @@ def get_signal_quality(serial_port, baud_rate="115200"):
 
         ser.close()
         print("Failed to retrieve signal quality.")
-        return None
+        return (-1,-1)
 
     except Exception as e:
         print("Error:", e)
-        return None
+        return (-2,-2)
 
 def Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
     if os.name == 'nt':
