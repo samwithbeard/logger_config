@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.8"
+version="0.0.9"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -517,7 +517,7 @@ def is_modem_connected(serial_port="", baud_rate="115200"):
         return False
 
 
-def reconnect_modem(sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
+def reconnect_modem(serial_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
     """
     Attempt to reconnect the modem by reinitializing it.
 
