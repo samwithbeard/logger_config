@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.11"
+version="0.0.12"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -326,6 +326,7 @@ mqtt_pem_file_outside = os.path.normpath(mqtt_pem_file_outside)
 intern=False
 if os.name == 'nt':
         print("Windows OS detected. Skipping 4G module startup check.")
+        modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
 
@@ -489,7 +490,7 @@ def Setup4G(modem_port, flicker_led, sim_pin, check_network_registration, check_
         flicker_led(6)
 
 
-Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
+Setup4G(modem_port, flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
 def is_modem_connected(serial_port="", baud_rate="115200"):
     """
     Check if the modem is connected and responding to AT commands.
