@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.10"
+version="0.0.11"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -979,7 +979,7 @@ try:
                     if not is_modem_connected():
                         print("Modem not connected. Attempting to reconnect...")
                         # Attempt to reconnect the modem
-                        reconnect_modem(sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)   
+                        reconnect_modem(modem_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)   
                     
                         
 
