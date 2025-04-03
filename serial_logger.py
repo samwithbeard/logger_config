@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.7"
+version="0.0.8"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -482,6 +482,10 @@ def Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, 
         flicker_led(5)
         registerd = check_network_registration(modem_port)
         flicker_led(6)
+if os.name == 'nt':
+        print("Windows OS detected. Skipping 4G module startup check.")
+else:
+        modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
 
 Setup4G(flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)
 def is_modem_connected(serial_port="", baud_rate="115200"):
@@ -987,6 +991,7 @@ try:
                 if v_diff > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
                     last_gps_speed = gps_speed
                     if os.name != 'nt':
+                        
                         signal_strength, signal_quality=get_signal_quality(modem_port)
                         
                     else:
