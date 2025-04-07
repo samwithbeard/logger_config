@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.13"
+version="0.0.12"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -469,19 +469,17 @@ def get_signal_quality(serial_port, baud_rate="115200"):
             print("No +CSQ: found in response.")
         
         ser.close()
-        return None  # Return None if parsing fails or response is invalid
+        return (-1,-1)  # Return None if parsing fails or response is invalid
 
     except Exception as e:
         print("Error:", e)
-        return None  # Return None in case of an exception
+        return (-1,-1)  # Return None in case of an exception
 
         ser.close()
         print("Failed to retrieve signal quality.")
-        return None#(-1,-1)
+        return (-1,-1)#(-1,-1)
 
-    except Exception as e:
-        print("Error:", e)
-        return None#(-2,-2)
+
 
 def Setup4G(modem_port, flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
     if os.name == 'nt':
