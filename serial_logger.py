@@ -76,7 +76,7 @@ led.off()
 
 version="0.0.12"
 print(version)
-logging_active=False
+logging_active=True
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
