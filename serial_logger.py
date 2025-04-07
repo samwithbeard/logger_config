@@ -212,6 +212,7 @@ mqtt_user_id = config.get('credentials', 'mqtt_username')
 mqtt_password = config.get('credentials', 'mqtt_password')
 mqtt_broker_intern = config.get('credentials', 'mqtt_broker_intern')
 mqtt_broker_outside = config.get('credentials', 'mqtt_broker_outside')
+default_vehicle_id = config.get('credentials', 'default_vehicle_id')
 sim_pin = config.get('credentials', 'sim_pin')
 
 # read public Configuration parameter
@@ -229,8 +230,8 @@ conf_status_period = float(config_p.get('recording', 'status_period'))
 try:
     UIC_VehicleID=config.get('credentials', 'vehicle_id')
 except:
-    print("no vehicle id in config file")
-    UIC_VehicleID="94856500666"
+    print("no vehicle id in config file, use default "+str(default_vehicle_id))
+    UIC_VehicleID=default_vehicle_id
 
 def get_speed_from_nmea(nmea_sentence):
         parts = nmea_sentence.split(',')
@@ -462,11 +463,11 @@ def get_signal_quality(serial_port, baud_rate="115200"):
 
         ser.close()
         print("Failed to retrieve signal quality.")
-        return (-1,-1)
+        return None#(-1,-1)
 
     except Exception as e:
         print("Error:", e)
-        return (-2,-2)
+        return None#(-2,-2)
 
 def Setup4G(modem_port, flicker_led, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin):
     if os.name == 'nt':
@@ -994,13 +995,18 @@ try:
                 if v_diff > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
                     last_gps_speed = gps_speed
                     if os.name != 'nt':
-                        
-                        signal_strength, signal_quality=get_signal_quality(modem_port)
-                        
+                        try:
+                            signal_strength, signal_quality=get_signal_quality(modem_port)
+                            message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
+                            message=add_element(message, "signal_quality", "Signal Quality", signal_quality) 
+                        except Exception as e:
+                            print("Error getting signal quality:", e)
+                            signal_strength, signal_quality=(-1, -2) 
+                                                  
                     else:
                         signal_strength, signal_quality=(-1, -2)
-                    message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
-                    message=add_element(message, "signal_quality", "Signal Quality", signal_quality)
+
+                    
                     send_json_message(mqtt_topic_publish, message)
                     last_basic_message_time = time.time()#basic message without serial
                 
@@ -1026,9 +1032,11 @@ try:
                     #print("telegram_hex "+str(telegram_hex))
                     telegram_header=(telegram_hex[:4])   
                     if logging_active:
-                            with open(data_path+"\\hex_telegram.txt", 'a') as file:
+                            
+                            with open(os.path.join(data_path, 'hex_telegram.txt'), 'a') as file:
                                 file.write(telegram_hex+"\n")  
-                            with open(data_path+"\\raw_telegram.txt", 'a') as file:
+                                
+                            with open(os.path.join(data_path, 'raw_telegram.txt'), 'a') as file:
                                 file.write(str(telegram_raw)+"\n")  
 
                     ICN_Separator = "1b0244"
@@ -1091,7 +1099,8 @@ try:
                                     lineid=line[0:2]       
                                     message=(" speed: "+str(rad_speed))
                                     if logging_active:    
-                                        with open(data_path+"\\output_ODO_interpreted.txt", 'a') as file:
+                                        
+                                        with open(os.path.join(data_path, 'output_ODO_interpreted.txt'), 'a') as file:
                                             file.write(message+" "+line+"\n")
                                     if float(rad_speed) > float(max_speed):
                                         max_speed=rad_speed           
@@ -1112,9 +1121,7 @@ try:
 
                         message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")
                      
-                        if logging_active:
-                            with open( data_path+"output_ODO_2.txt", 'a') as file:
-                                file.write(message+"\n")
+
                         send_json_message(mqtt_topic_publish, message)
                     else:#CORE NOVRAM
                         
@@ -1128,7 +1135,7 @@ try:
                             message=str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
                             message = message.rstrip('\n')
                             if logging_active:
-                                with open( data_path+"output.txt", 'a') as file:
+                                with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),"NOVRAM")
