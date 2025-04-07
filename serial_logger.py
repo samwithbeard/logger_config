@@ -76,7 +76,7 @@ led.off()
 
 version="0.0.14"
 print(version)
-logging_active=True
+logging_active=False
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
@@ -459,8 +459,8 @@ def get_signal_quality(serial_port, baud_rate="115200"):
                 if match:
                     signal_strength = int(match.group(1))
                     signal_quality = int(match.group(2))
-                    print("Signal Strength:", signal_strength)
-                    print("Signal Quality:", signal_quality)
+                    #print("Signal Strength:", signal_strength)
+                    #print("Signal Quality:", signal_quality)
                     ser.close()
                     return signal_strength, signal_quality
                 else:
@@ -988,7 +988,7 @@ for ser in sers:
 data = b""
 online=True
 retry=0
-
+signal_strength, signal_quality=get_signal_quality(modem_port)
 try:
     print("waiting for serial messages..")
     while True:
@@ -1047,7 +1047,12 @@ try:
                     if os.name != 'nt':
                         try:
                             print("retrieve signal quality for sending")
-                            signal_strength, signal_quality=get_signal_quality(modem_port)
+                            new_signal_strength, new_signal_quality=get_signal_quality(modem_port)
+                            if(new_signal_quality==-1 or new_signal_strength==-1):
+                                print("signal quality not available")
+                            else:
+                                signal_quality=new_signal_quality
+                                signal_strength=new_signal_strength    
                             message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
                             message=add_element(message, "signal_quality", "Signal Quality", signal_quality) 
                         except Exception as e:
