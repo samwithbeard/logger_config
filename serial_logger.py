@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.12"
+version="0.0.13"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -451,20 +451,20 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         ser.write(b'AT+CSQ\r\n')  # Send the AT+CSQ command
         response = ser.read(100).decode().strip()
         print("AT+CSQ Response:", response)
-
-        if "+CSQ:" in response:
-            # Extract the signal strength and quality values
-            print("response to get signal str")+str(response)
-            match = re.search(r"\+CSQ: (\d+),(\d+)", response)
-            if match:
-                signal_strength = int(match.group(1))
-                signal_quality = int(match.group(2))
-                print("Signal Strength:", signal_strength)
-                print("Signal Quality:", signal_quality)
-                ser.close()
-                return signal_strength, signal_quality
-            else:
-                print("Failed to parse signal strength and quality from response.")
+        for response in response.splitlines():
+            if "+CSQ:" in response:
+                # Extract the signal strength and quality values
+                print("response to get signal str")+str(response)
+                match = re.search(r"\+CSQ: (\d+),(\d+)", response)
+                if match:
+                    signal_strength = int(match.group(1))
+                    signal_quality = int(match.group(2))
+                    print("Signal Strength:", signal_strength)
+                    print("Signal Quality:", signal_quality)
+                    ser.close()
+                    return signal_strength, signal_quality
+                else:
+                    print("Failed to parse signal strength and quality from response.")
         else:
             print("No +CSQ: found in response.")
         
