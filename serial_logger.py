@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.12"
+version="0.0.14"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -153,8 +153,8 @@ def validate_json(json_data, schema):
         validate(instance=json_data, schema=schema)
         #print("JSON is valid.")
     except jsonschema.exceptions.ValidationError as err:
-        #print("JSON is invalid.")
-        #print("Error message:", err.message)
+        print("JSON is invalid.")
+        print("Error message:", err.message)
         n=0
 
 # URL of the JSON schema
@@ -244,7 +244,7 @@ def get_speed_from_nmea(nmea_sentence):
                 print("Error parsing speed from NMEA sentence.")
                 return
         else:
-            return None
+            return 0.0
         
 def update_data(self, message):
     try:
@@ -454,7 +454,7 @@ def get_signal_quality(serial_port, baud_rate="115200"):
         for response in response.splitlines():
             if "+CSQ:" in response:
                 # Extract the signal strength and quality values
-                print("response to get signal str")+str(response)
+                print("response to get signal str"+str(response))
                 match = re.search(r"\+CSQ: (\d+),(\d+)", response)
                 if match:
                     signal_strength = int(match.group(1))
@@ -618,28 +618,45 @@ def on_disconnect(client, userdata, rc):
 def on_message(client, userdata, msg):
     print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
 
-def replace_none_with_null(json_string):
+def replace_none_with_null(json_data):
     """
-    Replace all occurrences of None with 'null' in a JSON string.
+    Replace all occurrences of None with 'null' in a JSON object while maintaining JSON format.
+    Ensure the output is valid JSON.
 
-    :param json_string: The JSON string to process.
-    :return: The modified JSON string with None replaced by 'null'.
+    :param json_data: The JSON object to process.
+    :return: The modified JSON object with None replaced by 'null'.
+    """
+    if isinstance(json_data, dict):
+        return {key: replace_none_with_null(value) for key, value in json_data.items()}
+    elif isinstance(json_data, list):
+        return [replace_none_with_null(item) for item in json_data]
+    elif json_data is None:
+        return None  # Keep it as None, as JSON serialization will handle it correctly
+    else:
+        return json_data
+
+def ensure_json_serializable(data):
+    """
+    Ensure the data is JSON serializable by converting it to a JSON string and back.
+
+    :param data: The data to validate.
+    :return: A JSON-serializable object.
+    :raises ValueError: If the data cannot be serialized to JSON.
     """
     try:
-        json_data = json.loads(json_string)
-        json_data = json.dumps(json_data, default=lambda x: 'null' if x is None else x)
-        return json_data
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
-        return json_string
+        json_string = json.dumps(data)
+        return json.loads(json_string)
+    except (TypeError, ValueError) as e:
+        raise ValueError(f"Data is not JSON serializable: {e}")
         
-def send_json_message(topic, json_message):
-    json_message=replace_none_with_null(json_message)
+def send_json_message(topic, json_message_i):
+    json_message=replace_none_with_null(json_message_i)
+    
     try:
         validate_json(json_message,schema)
         message=str(json_message)
         client.publish(topic, message)
-        print("send "+str(message))
+        print("mqtt message "+str(message))
     except Exception as e:
         print("fail to send "+str(message) + str(e))
     
@@ -1021,12 +1038,15 @@ try:
                     
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
-                message=add_element(message, "gps_speed", "GPS Speed", gps_speed)                  
+                #print("create json message"+str(message))
+                message=add_element(message, "gps_speed", "GPS Speed", gps_speed)       
+                #print("add element to message"+str(message))           
                 v_diff=abs(float(gps_speed) - float(last_gps_speed)) if isinstance(gps_speed, (int, float)) and isinstance(last_gps_speed, (int, float)) else 0
                 if v_diff > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
                     last_gps_speed = gps_speed
                     if os.name != 'nt':
                         try:
+                            print("retrieve signal quality for sending")
                             signal_strength, signal_quality=get_signal_quality(modem_port)
                             message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
                             message=add_element(message, "signal_quality", "Signal Quality", signal_quality) 
@@ -1038,8 +1058,11 @@ try:
                         signal_strength, signal_quality=(-1, -2)
 
                     try:
+                        print("try to send json message..")
                         send_json_message(mqtt_topic_publish, message)
                     except Exception as e:
+                        print(message)
+                        print("Error sending JSON message:", e)
                         retry+=1
                         if retry> 10:
                             online=False
