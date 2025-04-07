@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.13"
+version="0.0.12"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -242,7 +242,7 @@ def get_speed_from_nmea(nmea_sentence):
                 return speed_kmh
             except (ValueError, IndexError):
                 print("Error parsing speed from NMEA sentence.")
-                return None
+                return
         else:
             return None
         
@@ -606,9 +606,23 @@ def on_disconnect(client, userdata, rc):
 def on_message(client, userdata, msg):
     print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
 
+def replace_none_with_null(json_string):
+    """
+    Replace all occurrences of None with 'null' in a JSON string.
 
+    :param json_string: The JSON string to process.
+    :return: The modified JSON string with None replaced by 'null'.
+    """
+    try:
+        json_data = json.loads(json_string)
+        json_data = json.dumps(json_data, default=lambda x: 'null' if x is None else x)
+        return json_data
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return json_string
+        
 def send_json_message(topic, json_message):
-    
+    json_message=replace_none_with_null(json_message)
     try:
         validate_json(json_message,schema)
         message=str(json_message)
