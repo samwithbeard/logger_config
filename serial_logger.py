@@ -76,7 +76,7 @@ led.off()
 
 version="0.0.14"
 print(version)
-logging_active=False
+logging_active=True
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
@@ -183,7 +183,7 @@ config_path = os.path.join(os.path.dirname(__file__), 'config')
 data_path = os.path.join(os.path.dirname(__file__), 'data')
 telegram_hex=""
 try:
-    logging.basicConfig(filename=data_path+"serial_logger.log", level=logging.DEBUG)
+    logging.basicConfig(filename=os.path.join(os.path.dirname(__file__), 'serial_logger.log'), level=logging.DEBUG)
 except:
     logging.basicConfig(filename='serial_logger.log', level=logging.DEBUG)
 
