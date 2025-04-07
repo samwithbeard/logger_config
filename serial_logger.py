@@ -74,9 +74,9 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.12"
+version="0.0.13"
 print(version)
-logging_active=True
+logging_active=False
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
 time.sleep(startup_sleep)
@@ -943,7 +943,8 @@ for ser in sers:
         data = ser.read(ser.in_waiting)
 
 data = b""
-
+online=True
+retry=0
 
 try:
     print("waiting for serial messages..")
@@ -980,10 +981,14 @@ try:
                         #print("Received GPS data in main script:")
                         #print(gps_data)
                         #time.sleep(2)
-                    if not is_modem_connected():
+                    if not online:
                         print("Modem not connected. Attempting to reconnect...")
                         # Attempt to reconnect the modem
-                        reconnect_modem(modem_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)   
+                        try:
+                            reconnect_modem(modem_port, sim_pin, check_network_registration, check_4G_startup, enter_sim_pin)   
+                            online=True
+                        except Exception as e: 
+                            print("Error during modem reconnection:", e)
                     
                         
 
@@ -1006,8 +1011,14 @@ try:
                     else:
                         signal_strength, signal_quality=(-1, -2)
 
-                    
-                    send_json_message(mqtt_topic_publish, message)
+                    try:
+                        send_json_message(mqtt_topic_publish, message)
+                    except Exception as e:
+                        retry+=1
+                        if retry> 10:
+                            online=False
+                            retry=0
+
                     last_basic_message_time = time.time()#basic message without serial
                 
 		#Odometrie:
