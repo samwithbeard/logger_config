@@ -242,7 +242,7 @@ def get_speed_from_nmea(nmea_sentence):
                 return speed_kmh
             except (ValueError, IndexError):
                 print("Error parsing speed from NMEA sentence.")
-                return
+                return 0.0
         else:
             return 0.0
         
