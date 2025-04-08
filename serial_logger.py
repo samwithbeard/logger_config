@@ -22,9 +22,11 @@ from SDMU_parser import parse_ICN_line
 from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
 import subprocess
+import psutil
 
 if os.name == 'posix':  # Check if the operating system is Linux
     from gpiozero import LED
+
 
 
 else:
@@ -74,7 +76,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.14"
+version="0.0.15"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -833,7 +835,21 @@ def get_temp():
             print("Invalid temperature value:", temp_str)
             return -0.666
 
-
+def get_cpu_load():
+    """
+    Returns the CPU load percentage.
+    Checks if the system is Windows or Linux and retrieves the CPU load accordingly.
+    """
+    try:
+        if os.name == 'nt':  # Windows
+            return psutil.cpu_percent(interval=1)
+        else:  # Linux
+            load1, load5, load15 = os.getloadavg()
+            cpu_count = os.cpu_count()
+            return (load1 / cpu_count) * 100
+    except Exception as e:
+        print(f"Error retrieving CPU load: {e}")
+        return -1
    
 
 def temp_check():
@@ -1004,10 +1020,13 @@ try:
                 timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
                 timestamp_fzdia = datetime.now().isoformat() + "Z"
                 cpu_temp=get_temp()
+                
+                
                 #cpu_temp=0
 
                 message=(str(UIC_VehicleID)+" INIT at time: "+str(timestamp)+" cpu temp:"+str(cpu_temp)+ " v_max "+str(max_speed))
                 
+
                 #gps_data=""
                 if os.name == 'nt':
                     #print('no gps on windows')
@@ -1061,7 +1080,13 @@ try:
                                                   
                     else:
                         signal_strength, signal_quality=(-1, -2)
-
+                    try:
+                        cpu_load=get_cpu_load()
+                        message=add_element(message, "cpu_load", "CPU Load", cpu_load)
+                    except Exception as e:
+                        print("Error getting CPU load:", e)
+                        cpu_load=-1
+                        message=add_element(message, "cpu_load", "CPU Load", cpu_load)
                     try:
                         print("try to send json message..")
                         send_json_message(mqtt_topic_publish, message)
