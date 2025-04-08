@@ -76,7 +76,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.15"
+version="0.0.16"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -850,6 +850,30 @@ def get_cpu_load():
     except Exception as e:
         print(f"Error retrieving CPU load: {e}")
         return -1
+
+def get_memory_load():
+    """
+    Returns the memory usage percentage.
+    Uses psutil to retrieve memory usage statistics.
+    """
+    try:
+        memory = psutil.virtual_memory()
+        return memory.percent
+    except Exception as e:
+        print(f"Error retrieving memory load: {e}")
+        return -1
+
+def get_disk_space():
+    """
+    Returns the disk usage percentage of the root directory.
+    Uses psutil to retrieve disk usage statistics.
+    """
+    try:
+        disk = psutil.disk_usage('/')
+        return disk.percent
+    except Exception as e:
+        print(f"Error retrieving disk space usage: {e}")
+        return -1
    
 
 def temp_check():
@@ -1081,12 +1105,28 @@ try:
                     else:
                         signal_strength, signal_quality=(-1, -2)
                     try:
-                        cpu_load=get_cpu_load()
-                        message=add_element(message, "cpu_load", "CPU Load", cpu_load)
+                        cpu_load = get_cpu_load()
+                        message = add_element(message, "cpu_load", "CPU Load", cpu_load)
                     except Exception as e:
                         print("Error getting CPU load:", e)
-                        cpu_load=-1
-                        message=add_element(message, "cpu_load", "CPU Load", cpu_load)
+                        cpu_load = -1
+                        message = add_element(message, "cpu_load", "CPU Load", cpu_load)
+
+                    try:
+                        memory_load = get_memory_load()
+                        message = add_element(message, "memory_load", "Memory Load", memory_load)
+                    except Exception as e:
+                        print("Error getting memory load:", e)
+                        memory_load = -1
+                        message = add_element(message, "memory_load", "Memory Load", memory_load)
+
+                    try:
+                        disk_space = get_disk_space()
+                        message = add_element(message, "disk_space", "Disk Space", disk_space)
+                    except Exception as e:
+                        print("Error getting disk space:", e)
+                        disk_space = -1
+                        message = add_element(message, "disk_space", "Disk Space", disk_space)
                     try:
                         print("try to send json message..")
                         send_json_message(mqtt_topic_publish, message)
