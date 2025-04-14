@@ -76,7 +76,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.16"
+version="0.0.17"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -651,7 +651,8 @@ def ensure_json_serializable(data):
     except (TypeError, ValueError) as e:
         raise ValueError(f"Data is not JSON serializable: {e}")
         
-def send_json_message(topic, json_message_i):
+def send_json_message(topic, json_message_i,message_counter):
+    json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
     json_message=replace_none_with_null(json_message_i)
     
     try:
@@ -659,10 +660,16 @@ def send_json_message(topic, json_message_i):
         message=str(json_message)
         client.publish(topic, message)
         print("mqtt message "+str(message))
+        if message_counter >= 10000:
+            message_counter=0
+        else:
+            message_counter += 1
+        
     except Exception as e:
         print("fail to send "+str(message) + str(e))
     
     toggle_led()
+    return message_counter
 
 def send_text_message(topic, message):
     try:        
@@ -1002,7 +1009,8 @@ else:
     message_types = ['GPRMC']  # Filter for GPRMC messages only
     gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
     gps_process.start()
-
+cpu_temp=-1
+max_speed=0
 gps_data=""
 gps_speed=0
 last_gps_speed=0
@@ -1015,7 +1023,7 @@ last_novram_message_time=0
 skipped_message = 0
 deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
 time_threshold = conf_min_time_odo  # time threshold in seconds
-                            
+message_counter=0                            
 
 # flush serial buffer on startup
 print("flushing serial buffer..")
@@ -1129,7 +1137,7 @@ try:
                         message = add_element(message, "disk_space", "Disk Space", disk_space)
                     try:
                         print("try to send json message..")
-                        send_json_message(mqtt_topic_publish, message)
+                        message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
                     except Exception as e:
                         print(message)
                         print("Error sending JSON message:", e)
@@ -1207,7 +1215,8 @@ try:
                             speed = float(parsed_frame['speed'])
                             current_time = time.time()
                             if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
-                                send_json_message(mqtt_topic_publish, message)
+                                message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
+                                
                                 last_speed = speed
                                 last_odo_message_time = current_time
                         
@@ -1249,10 +1258,9 @@ try:
                         message=str(my_uuid)+" t2 "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
                         message = message.rstrip('\n')
 
-                        message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")
-                     
+                        message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
 
-                        send_json_message(mqtt_topic_publish, message)
+                        message_counter=send_json_message(mqtt_topic_publish, message, message_counter)
                     else:#CORE NOVRAM
                         
                         if len(telegram_raw)>0:
@@ -1269,7 +1277,7 @@ try:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),"NOVRAM")
-                                send_json_message(mqtt_topic_publish, message)
+                                message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
                             else:
