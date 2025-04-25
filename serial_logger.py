@@ -76,7 +76,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.17"
+version="0.0.18"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -118,6 +118,7 @@ def flicker_led(n=1):
     """
     Toggle the state of the LED depending on its current state.
     """
+    print("flicker led"+str(n))
     i=0
     if led.is_lit:
         while i<=n:
@@ -152,12 +153,27 @@ def load_remote_json_schema(url):
 # Function to validate a JSON string against a JSON schema
 def validate_json(json_data, schema):
     try:
+        # Check if json_data is a string, and if so, parse it into a dictionary
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        elif not isinstance(json_data, dict):
+            raise ValueError("Input JSON data must be a dictionary or a JSON string.")
+
         validate(instance=json_data, schema=schema)
-        #print("JSON is valid.")
+        print("JSON is valid.")
+        return True
     except jsonschema.exceptions.ValidationError as err:
         print("JSON is invalid.")
-        print("Error message:", err.message)
-        n=0
+        print("Validation error message:", err.message)
+        return False
+    except json.JSONDecodeError as err:
+        print("Invalid JSON string.")
+        print("Decoding error message:", err.msg)
+        return False
+    except Exception as err:
+        print("An unexpected error occurred.")
+        print("Error message:", str(err))
+        return False
 
 # URL of the JSON schema
 schema_url = "https://code.sbb.ch/projects/PPP_FAHRZEUGDIAGNOSE_ROS/repos/train_data_transmission_format/raw/schema/train-diagnostic-data.schema.json"
@@ -328,7 +344,8 @@ mqtt_pem_file_outside = os.path.normpath(mqtt_pem_file_outside)
 #SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
 intern=False
 if os.name == 'nt':
-        print("Windows OS detected. Skipping 4G module startup check.")
+        print("Windows OS detected. Skipping 4G module startup check. and set to inern")
+        intern=False
         modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
@@ -656,14 +673,17 @@ def send_json_message(topic, json_message_i,message_counter):
     json_message=replace_none_with_null(json_message_i)
     
     try:
-        validate_json(json_message,schema)
-        message=str(json_message)
-        client.publish(topic, message)
-        print("mqtt message "+str(message))
-        if message_counter >= 10000:
-            message_counter=0
+        if validate_json(json_message,schema):
+            message=json.dumps(json_message)
+            client.publish(topic, message)
+            print("mqtt message "+str(message))
+        
+            if message_counter >= 10000:
+                message_counter=0
+            else:
+                message_counter += 1
         else:
-            message_counter += 1
+            print("message not valid "+str(json_message))
         
     except Exception as e:
         print("fail to send "+str(message) + str(e))
@@ -832,6 +852,7 @@ print("serial connection opened")
 def get_temp():
     if os.name == 'nt':
         temp=0
+        return temp
     else:
         res = os.popen('vcgencmd measure_temp').readline()
         temp_str = res.replace("temp=", "").replace("'C\n", "").strip()
