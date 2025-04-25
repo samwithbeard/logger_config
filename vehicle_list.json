@@ -9,6 +9,11 @@
             "device_uuid": "001B_444A_486C_7422",
             "vehicle_id": "94856500667",
             "comment":"SDi_Laptop"
+        },
+        {
+            "device_uuid": "EAP_Notebook",
+            "vehicle_id": "94856500669",
+            "comment":"Reserved for EAP Notebook"
         }
     ]
 }
