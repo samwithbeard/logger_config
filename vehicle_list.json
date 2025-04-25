@@ -1,6 +1,11 @@
 {
     "vehicles": [
         {
+            "device_uuid": "default",
+            "vehicle_id": "94856500666",
+            "comment":"reserved for default id"
+        },
+        {
             "device_uuid": "0x527b2f8b",
             "vehicle_id": "94856500668",
             "comment":"prototype"
