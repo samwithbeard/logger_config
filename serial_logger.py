@@ -23,14 +23,11 @@ from multiprocessing import Process, Queue
 from gps_collector import start_gps_collector
 import subprocess
 import psutil
+from enum import Enum
 
 if os.name == 'posix':  # Check if the operating system is Linux
     from gpiozero import LED
-
-
-
-else:
-    
+else:    
     print("gpiozero is not supported on Windows. Skipping GPIO setup.")
     # Define a simulated LED class for Windows or systems without gpiozero
     class SimulatedLED:
@@ -73,10 +70,11 @@ else:
 
     # Assign the simulated LED to the LED variable
     LED = SimulatedLED
+
 led = LED(6)
 led.off()
 
-version="0.0.18"
+version="0.0.20"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -263,6 +261,23 @@ def get_speed_from_nmea(nmea_sentence):
                 return 0.0
         else:
             return 0.0
+
+def get_position_from_nmea(nmea_sentence):
+    parts = nmea_sentence.split(',')
+    if parts[0] == '$GPRMC' and parts[2] == 'A':
+        latitude = float(parts[3][:2]) + float(parts[3][2:]) / 60
+        if parts[4] == 'S':
+            latitude = -latitude
+        longitude = float(parts[5][:3]) + float(parts[5][3:]) / 60
+        if parts[6] == 'W':
+            longitude = -longitude
+
+        
+        google_maps_link = f'https://www.google.com/maps/search/?api=1&query={latitude},{longitude}'
+
+        return latitude, longitude, google_maps_link
+    else:
+        return None, None
         
 def update_data(self, message):
     try:
@@ -342,13 +357,30 @@ mqtt_pem_file_outside = os.path.normpath(mqtt_pem_file_outside)
 #name       #port       #datei                                  #valid
 #SBB signed	8883, 8886	SBB-CL-B-Issuing-CA.pem	                27.09.2027
 #SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
+class OperationalStatus(Enum):
+    OTHER = "other"
+    UNKNOWN = "unknown"
+    OPERATIONAL = "operational"
+    PARKED = "parked"
+    MAINTENANCE = "maintenance"
+    TRAINING = "training"
+    SIMULATED = "simulated"
+    SCHLUMMERBETRIEB = "schlummerbetrieb"
+    EOPTA = "EoptA"
+    SHUTDOWN = "shutdown"
+
 intern=False
+
+# Assign the state Simulated to OPERATIONAL_STATUS
+OPERATIONAL_STATUS = OperationalStatus.SIMULATED.value
 if os.name == 'nt':
         print("Windows OS detected. Skipping 4G module startup check. and set to inern")
         intern=False
         modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
+        OPERATIONAL_STATUS = OperationalStatus.OTHER.value
+
 
 
 def check_network_registration(serial_port, baud_rate="115200", timeout=30):
@@ -935,20 +967,20 @@ def create_JSON_object(timestamp,UIC_VehicleID,cpu_temp,max_speed,position="",so
                 "vehicleType": "ICN",
                 "specification": version,
                 "time": timestamp,
-                "operationalStatus": "simulated",
+                "operationalStatus": OPERATIONAL_STATUS,
                 "data": [
                     {
-                        "key": "cpu_temp",
-                        "name": "CPU Temperature",
+                        "key": "lgr_cpu_temp",
+                        "name": "Logger CPU Temperature",
                         "value": cpu_temp 
                     },
                     {
-                        "key": "max_speed",
+                        "key": "lgr_max_speed",
                         "name": "Maximum Speed",
                         "value": max_speed
                     },
                     {
-                        "key": "gps",
+                        "key": "lgr_gps",
                         "name": "position",
                         "value": position
                     },
@@ -985,7 +1017,7 @@ def create_raw_JSON_object(timestamp,UIC_VehicleID,raw_data,position="",source="
                         "value": raw_data
                     },
                     {
-                        "key": "gps",
+                        "key": "lgr_gps",
                         "name": "position",
                         "value": position
                     },
@@ -1083,7 +1115,9 @@ try:
                 #gps_data=""
                 if os.name == 'nt':
                     #print('no gps on windows')
-                    gps_data="nt"
+                    gps_data="$GPRMC,123815.00,A,4723.945715,N,00803.375235,E,0.0,,250425,0.4,W,A*02"
+                    Latitude, Longitude, gm_link=(47.344920,8.550087,"https://www.google.com/maps?q=47.344920,8.550087")
+                    gps_speed=0
                 else:
                     if not gps_process.is_alive():
                         #print("GPS process has stopped. Restarting...")
@@ -1093,6 +1127,8 @@ try:
                     if not position_queue.empty():
                         gps_data = position_queue.get()
                         gps_speed = get_speed_from_nmea(gps_data)
+                        Latitude, Longitude, gm_link = get_position_from_nmea(gps_data)
+
                         #print("Received GPS data in main script:")
                         #print(gps_data)
                         #time.sleep(2)
@@ -1111,7 +1147,9 @@ try:
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
                 #print("create json message"+str(message))
-                message=add_element(message, "gps_speed", "GPS Speed", gps_speed)       
+                message=add_element(message, "lgr_lat", "Latitude", Latitude)
+                message=add_element(message, "lgr_lon", "Longitude", Longitude)
+                message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)       
                 #print("add element to message"+str(message))           
                 v_diff=abs(float(gps_speed) - float(last_gps_speed)) if isinstance(gps_speed, (int, float)) and isinstance(last_gps_speed, (int, float)) else 0
                 if v_diff > deviation_to_send or(time.time() - last_basic_message_time >= conf_status_period):
@@ -1125,8 +1163,8 @@ try:
                             else:
                                 signal_quality=new_signal_quality
                                 signal_strength=new_signal_strength    
-                            message=add_element(message, "signal_strength", "Signal Strength", signal_strength)                    
-                            message=add_element(message, "signal_quality", "Signal Quality", signal_quality) 
+                            message=add_element(message, "lgr_signal_strength", "Signal Strength", signal_strength)                    
+                            message=add_element(message, "lgr_signal_quality", "Signal Quality", signal_quality) 
                         except Exception as e:
                             print("Error getting signal quality:", e)
                             signal_strength, signal_quality=(-1, -2) 
@@ -1135,27 +1173,27 @@ try:
                         signal_strength, signal_quality=(-1, -2)
                     try:
                         cpu_load = get_cpu_load()
-                        message = add_element(message, "cpu_load", "CPU Load", cpu_load)
+                        message = add_element(message, "lgr_cpu_load", "CPU Load", cpu_load)
                     except Exception as e:
                         print("Error getting CPU load:", e)
                         cpu_load = -1
-                        message = add_element(message, "cpu_load", "CPU Load", cpu_load)
+                        message = add_element(message, "lgr_cpu_load", "CPU Load", cpu_load)
 
                     try:
                         memory_load = get_memory_load()
-                        message = add_element(message, "memory_load", "Memory Load", memory_load)
+                        message = add_element(message, "lgr_memory_load", "Memory Load", memory_load)
                     except Exception as e:
                         print("Error getting memory load:", e)
                         memory_load = -1
-                        message = add_element(message, "memory_load", "Memory Load", memory_load)
+                        message = add_element(message, "lgr_memory_load", "Memory Load", memory_load)
 
                     try:
                         disk_space = get_disk_space()
-                        message = add_element(message, "disk_space", "Disk Space", disk_space)
+                        message = add_element(message, "lgr_disk_space", "Disk Space", disk_space)
                     except Exception as e:
                         print("Error getting disk space:", e)
                         disk_space = -1
-                        message = add_element(message, "disk_space", "Disk Space", disk_space)
+                        message = add_element(message, "lgr_disk_space", "Disk Space", disk_space)
                     try:
                         print("try to send json message..")
                         message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
