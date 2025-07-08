@@ -66,6 +66,7 @@ else:
         @property
         def is_lit(self):
             return self._state
+        
 
     # Assign the simulated LED to the LED variable
     LED = SimulatedLED
@@ -73,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.21"
+version="0.0.22"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1275,7 +1276,10 @@ try:
                             current_time = time.time()
                             if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
                                 message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
-                                
+                                        
+                                message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO_RAW")                     
+
+                                message_counter_raw=send_json_message(mqtt_topic_publish, message_raw, message_counter)
                                 last_speed = speed
                                 last_odo_message_time = current_time
                         
@@ -1316,11 +1320,9 @@ try:
                         
                         message=str(my_uuid)+" t2 "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
                         message = message.rstrip('\n')
-
                         message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
-
                         message_counter=send_json_message(mqtt_topic_publish, message, message_counter)
-                        send_text_message(mqtt_topic_publish, telegram_hex)
+                        
                     else:#CORE NOVRAM
                         
                         if len(telegram_raw)>0:
