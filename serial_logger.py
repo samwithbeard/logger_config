@@ -13,7 +13,6 @@ import traceback
 import ssl
 import uuid
 import re
-import os
 import json
 import jsonschema
 from jsonschema import validate
@@ -74,7 +73,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.20"
+version="0.0.21"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -620,7 +619,7 @@ def reconnect_modem(serial_port, sim_pin, check_network_registration, check_4G_s
 if intern:
     MQTT_BROKER=mqtt_broker_intern
 else:
-    MQTT_BROKER=mqtt_port_outside
+    MQTT_BROKER=mqtt_broker_outside
 
 def check_pem_file(pem_file):
     try:
@@ -1076,7 +1075,8 @@ last_novram_message_time=0
 skipped_message = 0
 deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
 time_threshold = conf_min_time_odo  # time threshold in seconds
-message_counter=0                            
+message_counter=0    
+Latitude, Longitude, gm_link=(0,0,"")                           
 
 # flush serial buffer on startup
 print("flushing serial buffer..")
@@ -1320,6 +1320,7 @@ try:
                         message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
 
                         message_counter=send_json_message(mqtt_topic_publish, message, message_counter)
+                        send_text_message(mqtt_topic_publish, telegram_hex)
                     else:#CORE NOVRAM
                         
                         if len(telegram_raw)>0:
