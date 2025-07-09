@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.27"
+version="0.0.28"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1346,22 +1346,22 @@ try:
                             except:
                                 telegram_utf=str(telegram_raw)
                                 
-                            message=str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
-                            message = message.rstrip('\n')
+                            novram_message = str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
+                            novram_message = novram_message.rstrip('\n')
                             if logging_active:
                                 with open( os.path.join(data_path, 'output.txt'), 'a') as file:
-                                    file.write(message)
+                                    file.write(novram_message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 
-                                message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
+                                novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                 try:
-                                    message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))
+                                    novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))
                      
                                 except Exception as e:
-                                    message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
+                                    novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                     send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
 
-                                message_counter=send_json_message(mqtt_topic_novram, message,message_counter)
+                                message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
                             else:
