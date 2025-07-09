@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.22"
+version="0.0.23"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -339,6 +339,10 @@ except Exception as e:
 mqtt_port_outside = 8885               #8885
 mqtt_port_intern = 8883
 mqtt_topic_publish = UIC_VehicleID+"/ETCS"
+mqtt_topic_odo_raw=mqtt_topic_publish+"/odo_raw"
+mqtt_topic_odo=mqtt_topic_publish+"/odo"
+mqtt_topic_logger=mqtt_topic_publish+"/logger"
+mqtt_topic_debug=mqtt_topic_publish+"/debug"
 mqtt_topic_subscribe = "+/ETCS/#"
 mqtt_client_id_fahrzeug = UIC_VehicleID+"-ETCS-inte" #<uic>-ETCS-inte
 mqtt_topic_test_publish=mqtt_topic_publish+"/test"
@@ -797,7 +801,7 @@ def setup_mqtt_connection(intern):
         client.loop_start()
         # Testnachricht senden
         message= str(my_uuid)+"logger started mqtt connection"+" hash"+str(md5_hash)
-        send_text_message(mqtt_topic_publish,message)
+        send_text_message(mqtt_topic_debug,message)
         print("mqtt has been setup")
     except Exception as e:
         print("not able to connect to mqtt broker ")
@@ -877,7 +881,7 @@ while fail:
         except Exception as e:
             fail= True
             message= str(my_uuid)+" serial port  not ready"+ str(e)
-            send_text_message(mqtt_topic_publish,message)
+            send_text_message(mqtt_topic_debug,message)
             #time.sleep(5)
 
 print("serial connection opened")
@@ -939,7 +943,7 @@ def get_disk_space():
 def temp_check():
     temp = get_temp()    
     message=("logger CPU temp "+str(int(temp)))
-    send_text_message(mqtt_topic_publish, message)
+    send_text_message(mqtt_topic_debug, message)
     
     print(f"Current CPU temperature: {temp}°C")
     if temp > 80.0:  # Threshold for warning
@@ -947,10 +951,10 @@ def temp_check():
         while temp > 82.0:
             temp = get_temp()
             message="logger CPU too high, having a break.."
-            send_text_message(mqtt_topic_publish, message)
+            send_text_message(mqtt_topic_debug, message)
             time.sleep(1)  # Log every 1 seconds 
             message="..continue"
-            send_text_message(mqtt_topic_publish, message)
+            send_text_message(mqtt_topic_debug, message)
 
 
 def create_JSON_object(timestamp,UIC_VehicleID,cpu_temp,max_speed,position="",source="default"):
@@ -1197,7 +1201,7 @@ try:
                         message = add_element(message, "lgr_disk_space", "Disk Space", disk_space)
                     try:
                         print("try to send json message..")
-                        message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
+                        message_counter=send_json_message(mqtt_topic_debug, message,message_counter)
                     except Exception as e:
                         print(message)
                         print("Error sending JSON message:", e)
@@ -1275,11 +1279,12 @@ try:
                             speed = float(parsed_frame['speed'])
                             current_time = time.time()
                             if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
-                                message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
+                                message_counter=send_json_message(mqtt_topic_odo, message,message_counter)
                                         
-                                message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO_RAW")                     
-
-                                message_counter_raw=send_json_message(mqtt_topic_publish, message_raw, message_counter)
+                                message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
+                                #print("message_raw "+str(message_raw))
+                                
+                                message_counter_raw=send_json_message(mqtt_topic_odo_raw, message_raw, message_counter)
                                 last_speed = speed
                                 last_odo_message_time = current_time
                         
@@ -1321,7 +1326,7 @@ try:
                         message=str(my_uuid)+" t2 "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
                         message = message.rstrip('\n')
                         message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
-                        message_counter=send_json_message(mqtt_topic_publish, message, message_counter)
+                        message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                         
                     else:#CORE NOVRAM
                         
@@ -1338,7 +1343,7 @@ try:
                                 with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
-                                message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),"NOVRAM")
+                                message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                 message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
@@ -1352,7 +1357,7 @@ try:
                 message=create_raw_JSON_object(timestamp,UIC_VehicleID,message,"Exception") 
                 message= str(UIC_VehicleID)+" time: "+str(now)+" exception: "+ str(message)
                 if time.time() - last_ex_message_time >= 3:
-                    send_text_message(mqtt_topic_publish, message)
+                    send_text_message(mqtt_topic_debug, message)
                     last_ex_message_time = time.time()
 
             #if telegram_hex:
