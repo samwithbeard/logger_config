@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.26"
+version="0.0.27"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -277,7 +277,7 @@ def get_position_from_nmea(nmea_sentence):
 
         return latitude, longitude, google_maps_link
     else:
-        return None, None
+        return None
         
 def update_data(self, message):
     try:
@@ -1083,7 +1083,7 @@ deviation_to_send = conf_dbr_odo # only send message if speed changes more than 
 time_threshold = conf_min_time_odo  # time threshold in seconds
 message_counter=0    
 Latitude, Longitude, gm_link=(0,0,"")                           
-basic_message=""
+last_basic_message=""
 # flush serial buffer on startup
 print("flushing serial buffer..")
 for ser in sers:
@@ -1133,7 +1133,13 @@ try:
                     if not position_queue.empty():
                         gps_data = position_queue.get()
                         gps_speed = get_speed_from_nmea(gps_data)
-                        Latitude, Longitude, gm_link = get_position_from_nmea(gps_data)
+                        try:
+                            Latitude, Longitude, gm_link = get_position_from_nmea(gps_data)
+                        except Exception as e:
+                            #print("Error parsing GPS data:", e)
+                            #Latitude, Longitude, gm_link = (0, 0, "")
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}")
+                        
 
                         #print("Received GPS data in main script:")
                         #print(gps_data)
@@ -1203,7 +1209,7 @@ try:
                     try:
                         print("try to send json message..")
                         message_counter=send_json_message(mqtt_topic_logger, message,message_counter)
-                        basic_message=message.copy()  # Create a copy of the message for basic message
+                        last_basic_message=message.copy()  # Create a copy of the message for basic message
                     except Exception as e:
                         print(message)
                         print("Error sending JSON message:", e)
@@ -1339,22 +1345,22 @@ try:
                                 telegram_utf=telegram_raw.decode('utf-8')
                             except:
                                 telegram_utf=str(telegram_raw)
+                                
                             message=str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
                             message = message.rstrip('\n')
                             if logging_active:
                                 with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
+                                
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                 try:
-                                    message=add_element(message, "lgr_lat", "Latitude", Latitude)
-                                    message=add_element(message, "lgr_lon", "Longitude", Longitude)
-                                    message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)
+                                    message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))
+                     
                                 except Exception as e:
-                                    print("Error adding GPS data to message:", e)
-                                    message=add_element(message, "lgr_lat", "Latitude", 0)
-                                    message=add_element(message, "lgr_lon", "Longitude", 0)
-                                    message=add_element(message, "lgr_gps_speed", "GPS Speed", 0)
+                                    message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
+                                    send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+
                                 message_counter=send_json_message(mqtt_topic_novram, message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
