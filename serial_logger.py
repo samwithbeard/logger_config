@@ -68,13 +68,13 @@ else:
             return self._state
         
 
-    # Assign the simulated LED to the LED variable
+    # Assign the simulated LED to the LED variabledata/merged_global_log.csv
     LED = SimulatedLED
 
 led = LED(6)
 led.off()
 
-version="0.0.28"
+version="0.0.29"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -277,7 +277,7 @@ def get_position_from_nmea(nmea_sentence):
 
         return latitude, longitude, google_maps_link
     else:
-        return None
+        return None , None
         
 def update_data(self, message):
     try:
@@ -1138,7 +1138,7 @@ try:
                         except Exception as e:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
-                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}")
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link))
                         
 
                         #print("Received GPS data in main script:")
