@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.23"
+version="0.0.24"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1082,7 +1082,7 @@ deviation_to_send = conf_dbr_odo # only send message if speed changes more than 
 time_threshold = conf_min_time_odo  # time threshold in seconds
 message_counter=0    
 Latitude, Longitude, gm_link=(0,0,"")                           
-
+basic_message=""
 # flush serial buffer on startup
 print("flushing serial buffer..")
 for ser in sers:
@@ -1201,7 +1201,8 @@ try:
                         message = add_element(message, "lgr_disk_space", "Disk Space", disk_space)
                     try:
                         print("try to send json message..")
-                        message_counter=send_json_message(mqtt_topic_debug, message,message_counter)
+                        message_counter=send_json_message(mqtt_topic_logger, message,message_counter)
+                        basic_message=message.copy()  # Create a copy of the message for basic message
                     except Exception as e:
                         print(message)
                         print("Error sending JSON message:", e)
