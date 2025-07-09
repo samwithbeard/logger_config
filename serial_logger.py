@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.25"
+version="0.0.26"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1346,6 +1346,15 @@ try:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
+                                try:
+                                    message=add_element(message, "lgr_lat", "Latitude", Latitude)
+                                    message=add_element(message, "lgr_lon", "Longitude", Longitude)
+                                    message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)
+                                except Exception as e:
+                                    print("Error adding GPS data to message:", e)
+                                    message=add_element(message, "lgr_lat", "Latitude", 0)
+                                    message=add_element(message, "lgr_lon", "Longitude", 0)
+                                    message=add_element(message, "lgr_gps_speed", "GPS Speed", 0)
                                 message_counter=send_json_message(mqtt_topic_novram, message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
