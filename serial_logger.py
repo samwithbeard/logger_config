@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.24"
+version="0.0.25"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -339,10 +339,11 @@ except Exception as e:
 mqtt_port_outside = 8885               #8885
 mqtt_port_intern = 8883
 mqtt_topic_publish = UIC_VehicleID+"/ETCS"
-mqtt_topic_odo_raw=mqtt_topic_publish+"/odo_raw"
+mqtt_topic_raw_odo=mqtt_topic_publish+"/raw_odo"
 mqtt_topic_odo=mqtt_topic_publish+"/odo"
 mqtt_topic_logger=mqtt_topic_publish+"/logger"
 mqtt_topic_debug=mqtt_topic_publish+"/debug"
+mqtt_topic_novram=mqtt_topic_publish+"/novram"
 mqtt_topic_subscribe = "+/ETCS/#"
 mqtt_client_id_fahrzeug = UIC_VehicleID+"-ETCS-inte" #<uic>-ETCS-inte
 mqtt_topic_test_publish=mqtt_topic_publish+"/test"
@@ -1285,7 +1286,7 @@ try:
                                 message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
                                 #print("message_raw "+str(message_raw))
                                 
-                                message_counter_raw=send_json_message(mqtt_topic_odo_raw, message_raw, message_counter)
+                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                 last_speed = speed
                                 last_odo_message_time = current_time
                         
@@ -1345,7 +1346,7 @@ try:
                                     file.write(message)
                             if time.time() - last_novram_message_time >= conf_min_time_novram:
                                 message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                message_counter=send_json_message(mqtt_topic_publish, message,message_counter)
+                                message_counter=send_json_message(mqtt_topic_novram, message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
                             else:
