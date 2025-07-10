@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.30"
+version="0.0.31"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1064,7 +1064,7 @@ if os.name == 'nt':
     print('no gps on windows')
     time.sleep(3)
 else:
-    message_types = ['GPRMC']  # Filter for GPRMC messages only
+    message_types  = ['GPRMC', 'GPGGA', 'GPGSA', 'GPGSV']# ['GPRMC']  # Filter for GPRMC messages only  = ['GPRMC', 'GPGGA', 'GPGSA', 'GPGSV']
     gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
     gps_process.start()
 cpu_temp=-1
@@ -1130,7 +1130,36 @@ try:
                         gps_process.start()
 
                     if not position_queue.empty():
-                        gps_data = position_queue.get()
+                        gps_raw_data = position_queue.get()
+
+                        # Output debug information in a human-readable format
+                        if gps_raw_data.startswith('$GPRMC'):
+                            gps_data = gps_raw_data
+                            #print("Debug Info: GPRMC - Recommended Minimum Specific GPS/Transit Data")
+                        elif gps_raw_data.startswith('$GPGGA'):
+                            #print("Debug Info: GPGGA - Global Positioning System Fix Data")
+                            fields = gps_raw_data.split(',')
+                            if len(fields) > 6:
+                                fix_quality = fields[6]
+                                #print(f"Field: Fix Quality Indicator ({fix_quality} = {'Invalid fix' if fix_quality == '0' else 'GPS fix' if fix_quality == '1' else 'Differential GPS fix' if fix_quality == '2' else 'Unknown'})")
+                        elif gps_raw_data.startswith('$GPVTG'):
+                            print("Debug Info: GPVTG - Track Made Good and Ground Speed")
+                        elif gps_raw_data.startswith('$GPGSA'):
+                            #print("Debug Info: GPGSA - GPS DOP and Active Satellites")
+                            fields = gps_raw_data.split(',')
+                            if len(fields) > 2:
+                                fix_mode = fields[2]
+                                #print(f"Field: Fix Mode ({fix_mode} = {'Fix not available' if fix_mode == '1' else '2D fix' if fix_mode == '2' else '3D fix' if fix_mode == '3' else 'Unknown'})")
+                        elif gps_raw_data.startswith('$GPGSV'):
+                            #print("Debug Info: GPGSV - GPS Satellites in View")
+                            fields = gps_raw_data.split(',')
+                            if len(fields) > 3:
+                                num_satellites = fields[3]
+                                #print(f"Field: Number of Satellites in View ({num_satellites})")
+
+
+
+
                         gps_speed = get_speed_from_nmea(gps_data)
                         try:
                             Latitude, Longitude, gm_link = get_position_from_nmea(gps_data)
@@ -1139,7 +1168,7 @@ try:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
                             gps_error_count+=1
-                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count))
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ "nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
                             if  gps_error_count > 60:
                                 #print("GPS error count exceeded 60, restarting GPS process..")
                                 gps_process.terminate()
