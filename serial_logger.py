@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.29"
+version="0.0.30"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1084,6 +1084,7 @@ time_threshold = conf_min_time_odo  # time threshold in seconds
 message_counter=0    
 Latitude, Longitude, gm_link=(0,0,"")                           
 last_basic_message=""
+gps_error_count=0
 # flush serial buffer on startup
 print("flushing serial buffer..")
 for ser in sers:
@@ -1099,10 +1100,8 @@ signal_strength, signal_quality=get_signal_quality(modem_port)
 try:
     print("waiting for serial messages..")
     while True:
-
         #temp_check()        
-        #with open('data/serial_log.txt', 'a') as log_file:
-        while True:
+        #with open('data/serial_log.txt', 'a') as log_file:        
 
             loopcounter+=1
 
@@ -1135,10 +1134,20 @@ try:
                         gps_speed = get_speed_from_nmea(gps_data)
                         try:
                             Latitude, Longitude, gm_link = get_position_from_nmea(gps_data)
+                            gps_error_count=0
                         except Exception as e:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
-                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link))
+                            gps_error_count+=1
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count))
+                            if  gps_error_count > 60:
+                                #print("GPS error count exceeded 60, restarting GPS process..")
+                                gps_process.terminate()
+                                gps_process.join()
+                                gps_process = Process(target=start_gps_collector, args=(position_queue,))
+                                gps_process.start()
+                                gps_error_count=0
+                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded 60, restarting GPS process..")
                         
 
                         #print("Received GPS data in main script:")
