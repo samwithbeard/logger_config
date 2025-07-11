@@ -74,7 +74,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.31"
+version="0.0.32"
 print(version)
 logging_active=False
 startup_sleep=1
