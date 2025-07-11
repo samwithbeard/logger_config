@@ -23,9 +23,12 @@ from gps_collector import start_gps_collector
 import subprocess
 import psutil
 from enum import Enum
+import threading
+
 
 if os.name == 'posix':  # Check if the operating system is Linux
     from gpiozero import LED
+
 else:    
     print("gpiozero is not supported on Windows. Skipping GPIO setup.")
     # Define a simulated LED class for Windows or systems without gpiozero
@@ -74,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.32"
+version="0.0.33"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -311,6 +314,27 @@ print("UUID: " + str(my_uuid))
 # Load vehicle_list.json and check for vehicle_id matching my_uuid
 vehicle_list_path = os.path.join(os.path.dirname(__file__), 'config', 'vehicle_list.json')
 
+
+'''
+TO BE REMOVED
+'''
+def reboot_linux_after_delay(delay_minutes=15):
+    def reboot():
+        if os.name == 'posix':
+            print(f"Rebooting system in {delay_minutes} minutes...")
+            time.sleep(delay_minutes * 60)
+            print("Rebooting now.")
+            os.system('sudo reboot')
+    t = threading.Thread(target=reboot, daemon=True)
+    t.start()
+
+reboot_linux_after_delay(30)
+
+'''
+TO BE REMOVED
+'''
+
+
 try:
     with open(vehicle_list_path, 'r') as file:
         vehicle_list = json.load(file)
@@ -380,11 +404,13 @@ intern=False
 OPERATIONAL_STATUS = OperationalStatus.SIMULATED.value
 if os.name == 'nt':
         print("Windows OS detected. Skipping 4G module startup check. and set to inern")
-        intern=False
+        intern=True #if starting on windows we assume we are in the intern network
+
         modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
         OPERATIONAL_STATUS = OperationalStatus.OTHER.value
+        intern=False # if starting on linux we assume we are in the outside network
 
 
 
@@ -1297,8 +1323,7 @@ try:
                     
                     icn_count = telegram_hex.count(ICN_Separator)+icn_count
                     #print(f"Count of '1b0244' in the telegram hex string: {icn_count} " +str(telegram_hex)[:100]+"...")
-                    if icn_count>1:
-                        time.sleep(1)
+
                     #telegram_header = "1a6b" 
                     #if len(telegram_hex)>0:
                         #print("telegram header "+telegram_header+"\t "+str(len(telegram_hex)))
