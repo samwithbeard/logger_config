@@ -1372,7 +1372,7 @@ try:
                                 timestamp_fzdia = datetime.now().isoformat() + "Z"
                                 message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
                                 message = add_odo_frame(message, parsed_frame)
-
+                                message = add_element(message, "serial_id", "Serial ID", str(ser_id))
                                 speed = float(parsed_frame['speed'])
                                 current_time = time.time()
                                 if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
@@ -1422,7 +1422,7 @@ try:
                             
                             message=str(my_uuid)+" t2 "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
                             message = message.rstrip('\n')
-                            message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
+                            message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO 09b5")                     
                             message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
                         elif str(telegram_raw) and all(chr(b).isprintable() or chr(b) in '\r\n\t' for b in telegram_raw):
@@ -1471,7 +1471,7 @@ try:
                             except:
                                 continue
 
-                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW")
+                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
                             message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
                             message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
