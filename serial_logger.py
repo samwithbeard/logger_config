@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.44"
+version="0.0.45"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -715,8 +715,10 @@ def replace_none_with_null(json_data):
         return [replace_none_with_null(item) for item in json_data]
     elif json_data is None:
         return None  # Keep it as None, as JSON serialization will handle it correctly
-    else:
+    elif isinstance(json_data, (str, int, float, bool)):
         return json_data
+    else:
+        return str(json_data)
 
 def ensure_json_serializable(data):
     """
