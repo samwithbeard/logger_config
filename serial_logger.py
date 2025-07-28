@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.49"
+version="0.0.50"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -709,16 +709,20 @@ def replace_none_with_null(data):
     :param data: The JSON object to process.
     :return: The modified JSON object with None replaced by 'null'.
     """
-    if isinstance(data, dict):
-        return {key: replace_none_with_null(value) for key, value in data.items()}
-    elif isinstance(data, list):
-        return [replace_none_with_null(item) for item in data]
-    elif data is None:
-        return None  # Keep it as None, as JSON serialization will handle it correctly
-    elif isinstance(data, (str, int, float, bool)):
-        return data
-    else:
-        return str(data)
+    try:
+        if isinstance(data, dict):
+            return {key: replace_none_with_null(value) for key, value in data.items()}
+        elif isinstance(data, list):
+            return [replace_none_with_null(item) for item in data]
+        elif data is None:
+            return None  # Keep it as None, as JSON serialization will handle it correctly
+        elif isinstance(data, (str, int, float, bool)):
+            return data
+        else:
+            return str(data)
+    except Exception as e:
+        print(f"Error replacing None with null: {e}")
+        raise ValueError(f"Data is not JSON serializable: {e}")
 
 def ensure_json_serializable(data):
     """
@@ -735,8 +739,8 @@ def ensure_json_serializable(data):
         raise ValueError(f"Data is not JSON serializable: {e}")
         
 def send_json_message(topic, json_message_i,message_counter):
-    json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-    try:
+    try:    
+        json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         json_message=replace_none_with_null(json_message_i)
     except Exception as e:
         send_text_message(mqtt_topic_debug, "Error replacing None with null: " + str(e))
