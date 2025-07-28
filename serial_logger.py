@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.39"
+version="0.0.40"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1134,10 +1134,15 @@ data = b""
 online=True
 retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
-message= "logger script loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
+message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
-message= str(serial_by_path_dir)+" serial ports found by path"
-send_text_message(mqtt_topic_debug,message)
+try:
+    message= str(serial_by_path_dir[0])+" serial ports found by path"
+    send_text_message(mqtt_topic_debug,message)
+except IndexError:
+    message= "no serial ports found by path"
+    send_text_message(mqtt_topic_debug,message)
+
 try:
     print("waiting for serial messages..")
     while True:
@@ -1424,8 +1429,10 @@ try:
                             message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO")                     
                             message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
-                        else:#CORE NOVRAM
-                            
+                        elif str(telegram_raw) and all(chr(b).isprintable() or chr(b) in '\r\n\t' for b in telegram_raw):
+                            # CORE NOVRAM: Only process if all characters are printable (or whitespace)
+                        
+                           
                             if len(telegram_raw)>0:
                                 #print("no header found-> plain text len"+str(len(telegram_raw))+" time "+timestamp+" telegram: "+str(telegram_raw))
                             
@@ -1461,6 +1468,19 @@ try:
                                     skipped_message = 0
                                 else:
                                     skipped_message +=1
+                        else: 
+                            try:
+                                telegram_utf=telegram_raw.decode('utf-8')
+                                
+                            except:
+                                continue
+
+                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW")
+                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
+                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
+                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             
 
             except Exception as e:
