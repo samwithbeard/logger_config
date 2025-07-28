@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.33"
+version="0.0.34"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -328,7 +328,7 @@ def reboot_linux_after_delay(delay_minutes=15):
     t = threading.Thread(target=reboot, daemon=True)
     t.start()
 
-reboot_linux_after_delay(30)
+reboot_linux_after_delay(120)
 
 '''
 TO BE REMOVED
@@ -402,14 +402,23 @@ intern=False
 
 # Assign the state Simulated to OPERATIONAL_STATUS
 OPERATIONAL_STATUS = OperationalStatus.SIMULATED.value
+serial_by_path_dir=[]
 if os.name == 'nt':
         print("Windows OS detected. Skipping 4G module startup check. and set to inern")
         intern=True #if starting on windows we assume we are in the intern network
-
+        serial_by_path_dir = "COM3"  # Set to a default COM port for Windows
         modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
         OPERATIONAL_STATUS = OperationalStatus.OTHER.value
+        # List all devices in /dev/serial/by-path/ and store them in a variable
+        serial_by_path_dir = "/dev/serial/by-path/"
+        serial_devices_by_path = []
+        if os.path.exists(serial_by_path_dir) and os.path.isdir(serial_by_path_dir):
+            serial_devices_by_path = [
+            os.path.join(serial_by_path_dir, f)
+            for f in os.listdir(serial_by_path_dir)
+            ]
         intern=False # if starting on linux we assume we are in the outside network
 
 
@@ -911,6 +920,8 @@ while fail:
             send_text_message(mqtt_topic_debug,message)
             #time.sleep(5)
 
+
+
 print("serial connection opened")
 def get_temp():
     if os.name == 'nt':
@@ -1123,6 +1134,10 @@ data = b""
 online=True
 retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
+message= "logger script loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
+send_text_message(mqtt_topic_debug,message)
+message= str(serial_by_path_dir)+" serial ports found by path"
+send_text_message(mqtt_topic_debug,message)
 try:
     print("waiting for serial messages..")
     while True:
