@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.48"
+version="0.0.49"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -736,7 +736,11 @@ def ensure_json_serializable(data):
         
 def send_json_message(topic, json_message_i,message_counter):
     json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-    json_message=replace_none_with_null(json_message_i)
+    try:
+        json_message=replace_none_with_null(json_message_i)
+    except Exception as e:
+        send_text_message(mqtt_topic_debug, "Error replacing None with null: " + str(e))
+        send_text_message(mqtt_topic_debug, "type of json_message_i: " + str(type(json_message_i)))
     
     try:
         if validate_json(json_message,schema):
