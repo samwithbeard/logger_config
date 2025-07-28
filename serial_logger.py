@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.43"
+version="0.0.44"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1371,20 +1371,18 @@ try:
                                 frame, splitted_line, parsed_frame = parse_ICN_line(line)
                                 timestamp_fzdia = datetime.now().isoformat() + "Z"
                                 message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
+                                #message = add_element(message, "serial_id", "Serial ID", str(ser_id))
                                 message = add_odo_frame(message, parsed_frame)
-                                message = add_element(message, "serial_id", "Serial ID", str(ser_id))
+                                
                                 speed = float(parsed_frame['speed'])
                                 current_time = time.time()
                                 if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
-                                    message_counter=send_json_message(mqtt_topic_odo, message,message_counter)
-                                            
+                                    message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
                                     message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
-                                    #print("message_raw "+str(message_raw))
-                                    
+                                    #print("message_raw "+str(message_raw))                                    
                                     message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                     last_speed = speed
-                                    last_odo_message_time = current_time
-                            
+                                    last_odo_message_time = current_time                           
                                 
 
                             message=str(my_uuid)+" t1a6b "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
