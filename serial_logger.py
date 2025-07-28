@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.42"
+version="0.0.43"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1465,19 +1465,23 @@ try:
                                 else:
                                     skipped_message +=1
                         else: 
+
                             try:
-                                telegram_utf=telegram_raw.decode('utf-8')
-                                
+                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
+                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             except:
                                 continue
-
-                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
-                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
-                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
-                            message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            
+                            try:
+                                telegram_utf=telegram_raw.decode('utf-8')
+                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
+                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                            except:
+                                continue
+                            try:
+                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
+                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                            except:
+                                continue
 
             except Exception as e:
                 print(e)
