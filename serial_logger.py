@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.38"
+version="0.0.39"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1303,9 +1303,10 @@ try:
                     last_basic_message_time = time.time()#basic message without serial
                 
 		#retrieve serial data
-                telegrams=[]
+                
                 
                 for ser in sers:
+                    telegrams=[]
                     data=b""
                     if hasattr(ser, 'port'):
                         port_path = ser.port
