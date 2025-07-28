@@ -760,7 +760,7 @@ def send_json_message(topic, json_message_i,message_counter):
             print("message not valid "+str(json_message))
         
     except Exception as e:
-        print("fail to send "+str(message) + str(e))
+        print("fail to send "+str(json_message) + str(e))
     
     toggle_led()
     return message_counter
