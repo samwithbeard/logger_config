@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.46"
+version="0.0.47"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -328,7 +328,7 @@ def reboot_linux_after_delay(delay_minutes=15):
     t = threading.Thread(target=reboot, daemon=True)
     t.start()
 
-reboot_linux_after_delay(120)
+reboot_linux_after_delay(15)
 
 '''
 TO BE REMOVED
@@ -1355,6 +1355,16 @@ try:
                         #telegram_header = "1a6b" 
                         #if len(telegram_hex)>0:
                             #print("telegram header "+telegram_header+"\t "+str(len(telegram_hex)))
+                        num_unprintable_hex = sum(1 for c in telegram_hex if not chr(int(c, 16)).isprintable())
+                        num_unprintable_raw = sum(1 for b in telegram_raw if not (chr(b).isprintable() or chr(b) in '\r\n\t'))
+                        create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
+                        add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                        add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
+                        add_element(raw_message, "icn_count", "ICN Separator Count", str(icn_count)   )
+                        add_element(raw_message, "ser_id", "Serial ID", str(ser_id)   )
+                        add_element(raw_message, "telegram_header", "Telegram Header", telegram_header   )
+                        send_json_message(mqtt_topic_debug, raw_message, message_counter_raw)
+
 
                         if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
                             #print("telegram 1a6b")
@@ -1425,7 +1435,7 @@ try:
                             message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO 09b5")                     
                             message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
-                        elif str(telegram_raw) and all(chr(b).isprintable() or chr(b) in '\r\n\t' for b in telegram_raw):
+                        elif num_unprintable_hex < 1 and num_unprintable_raw < 1 and len(telegram_hex) > 10 and icn_count < 1: #if no header found, check if telegram is printable
                             # CORE NOVRAM: Only process if all characters are printable (or whitespace)
                         
                            
@@ -1467,18 +1477,25 @@ try:
                         else: 
 
                             try:
+
                                 raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
+                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
                                 message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             except:
                                 continue
                             try:
                                 telegram_utf=telegram_raw.decode('utf-8')
                                 raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
+                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   ) 
                                 message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             except:
                                 continue
                             try:
                                 raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
+                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
                                 message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
                             except:
                                 continue
