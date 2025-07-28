@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.41"
+version="0.0.42"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1110,7 +1110,8 @@ last_novram_message_time=0
 skipped_message = 0
 deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
 time_threshold = conf_min_time_odo  # time threshold in seconds
-message_counter=0    
+message_counter=0 
+message_counter_raw=0   
 Latitude, Longitude, gm_link=(0,0,"")                           
 last_basic_message=""
 gps_error_count=0
