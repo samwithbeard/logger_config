@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.40"
+version="0.0.41"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -410,15 +410,7 @@ if os.name == 'nt':
         modem_port="COM3"
 else:
         modem_port="/dev/serial/by-id/usb-SimTech__Incorporated_SimTech__Incorporated_0123456789ABCDEF-if04-port0"    
-        OPERATIONAL_STATUS = OperationalStatus.OTHER.value
-        # List all devices in /dev/serial/by-path/ and store them in a variable
-        serial_by_path_dir = "/dev/serial/by-path/"
-        serial_devices_by_path = []
-        if os.path.exists(serial_by_path_dir) and os.path.isdir(serial_by_path_dir):
-            serial_devices_by_path = [
-            os.path.join(serial_by_path_dir, f)
-            for f in os.listdir(serial_by_path_dir)
-            ]
+        OPERATIONAL_STATUS = OperationalStatus.OPERATIONAL.value        
         intern=False # if starting on linux we assume we are in the outside network
 
 
@@ -858,8 +850,8 @@ client=setup_mqtt_connection(intern)
 
 
 
-def list_serial_interfaces_linux():
-    directory = '/dev/serial/by-id/'
+def list_serial_interfaces_linux(directory = '/dev/serial/by-id/'):
+    
     ports=[]
     if os.path.exists(directory) and os.path.isdir(directory):
         files = os.listdir(directory)
@@ -1137,8 +1129,11 @@ signal_strength, signal_quality=get_signal_quality(modem_port)
 message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
 try:
-    message= str(serial_by_path_dir[0])+" serial ports found by path"
-    send_text_message(mqtt_topic_debug,message)
+    serial_by_path_dir = "/dev/serial/by-path/"
+    list=list_serial_interfaces_linux(serial_by_path_dir)
+    for port in list:
+        message= str("serial port found by path: "+str(port))  
+        send_text_message(mqtt_topic_debug,message)
 except IndexError:
     message= "no serial ports found by path"
     send_text_message(mqtt_topic_debug,message)
