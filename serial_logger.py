@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.34"
+version="0.0.35"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1209,7 +1209,9 @@ try:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
                             gps_error_count+=1
-                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ "nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ " nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
+                            send_text_message(mqtt_topic_debug, f"GPS raw data: "+ str(gps_data))
+                            
                             if  gps_error_count > 60:
                                 #print("GPS error count exceeded 60, restarting GPS process..")
                                 gps_process.terminate()
@@ -1421,6 +1423,7 @@ try:
                         
                             try:
                                 telegram_utf=telegram_raw.decode('utf-8')
+                                
                             except:
                                 telegram_utf=str(telegram_raw)
                                 
@@ -1438,8 +1441,13 @@ try:
                                 except Exception as e:
                                     novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                     send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-
-                                message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                zero_count = telegram_utf.count('0')
+                                novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
+                                novram_message=add_element(novram_message, "len", "length", str(len(telegram_utf)))
+                                if zero_count > 100:
+                                    message_counter_raw=send_json_message(mqtt_topic_odo, novram_message,message_counter_raw)
+                                else: 
+                                    message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                 last_novram_message_time = time.time()#basic message without serial
                                 skipped_message = 0
                             else:
