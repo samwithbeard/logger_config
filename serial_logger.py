@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.45"
+version="0.0.46"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -701,24 +701,24 @@ def on_disconnect(client, userdata, rc):
 def on_message(client, userdata, msg):
     print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
 
-def replace_none_with_null(json_data):
+def replace_none_with_null(data):
     """
     Replace all occurrences of None with 'null' in a JSON object while maintaining JSON format.
     Ensure the output is valid JSON.
 
-    :param json_data: The JSON object to process.
+    :param data: The JSON object to process.
     :return: The modified JSON object with None replaced by 'null'.
     """
-    if isinstance(json_data, dict):
-        return {key: replace_none_with_null(value) for key, value in json_data.items()}
-    elif isinstance(json_data, list):
-        return [replace_none_with_null(item) for item in json_data]
-    elif json_data is None:
+    if isinstance(data, dict):
+        return {key: replace_none_with_null(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [replace_none_with_null(item) for item in data]
+    elif data is None:
         return None  # Keep it as None, as JSON serialization will handle it correctly
-    elif isinstance(json_data, (str, int, float, bool)):
-        return json_data
+    elif isinstance(data, (str, int, float, bool)):
+        return data
     else:
-        return str(json_data)
+        return str(data)
 
 def ensure_json_serializable(data):
     """
