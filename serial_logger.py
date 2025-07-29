@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.51"
+version="0.0.52"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1372,10 +1372,10 @@ try:
                         meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
                         add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
                         add_element(meta_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                        add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count)   )
-                        add_element(meta_message, "ser_id", "Serial ID", str(ser_id)   )
-                        add_element(meta_message, "telegram_header", "Telegram Header", telegram_header   )
-                        send_json_message(mqtt_topic_debug, meta_message, message_counter_raw)
+                        add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count))
+                        add_element(meta_message, "ser_id", "Serial ID", str(ser_id))
+                        add_element(meta_message, "telegram_header", "Telegram Header", telegram_header)
+                        #message_counter_raw = send_json_message(mqtt_topic_debug, meta_message, message_counter_raw)
 
 
                         if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
