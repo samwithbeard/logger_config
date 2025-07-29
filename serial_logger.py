@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.54"
+version="0.0.56"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1485,6 +1485,7 @@ try:
                                     skipped_message +=1
                         else: 
                             if time.time() - last_remaining_message_time >= conf_status_period:
+                                send_text_message(mqtt_topic_debug, "META")
                                 try:
                                     meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
                                     add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
@@ -1502,7 +1503,7 @@ try:
                                     raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
                                     add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
                                     add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                    send_text_message(mqtt_topic_debug, raw_message)
                                 except:
                                     continue
                                 try:
@@ -1510,14 +1511,14 @@ try:
                                     raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
                                     add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
                                     add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   ) 
-                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                    send_text_message(mqtt_topic_debug, raw_message)
                                 except:
                                     continue
                                 try:
                                     raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
                                     add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
                                     add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                    send_text_message(mqtt_topic_debug, raw_message)
                                 except:
                                     continue
                                 last_remaining_message_time = time.time()#basic message without serial
