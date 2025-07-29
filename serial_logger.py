@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.55"
+version="0.0.54"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -744,8 +744,8 @@ def send_json_message(topic, json_message_i,message_counter):
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         json_message=replace_none_with_null(json_message_i)
     except Exception as e:
-        send_debug_message( "Error send json message: " + str(e))
-        send_debug_message( "type of json_message_i: " + str(type(json_message_i)))
+        send_text_message(mqtt_topic_debug, "Error send json message: " + str(e))
+        send_text_message(mqtt_topic_debug, "type of json_message_i: " + str(type(json_message_i)))
         json_message=json_message_i
     
     try:
@@ -773,15 +773,6 @@ def send_text_message(topic, message):
         print("send "+str(message))
     except Exception as e:
         print("fail to send "+str(message) + str(e))
-
-def send_debug_message(message):
-    throttle=1
-    if time.now().second % throttle != 0:
-        print("throttle debug message")
-        return
-    message=" time:"+str(datetime.now())+" uuid:"+str(my_uuid)+" vehicle: "+str(UIC_VehicleID)+" version: "+str(version)+" /n"+str(message)+"/n"
-    print("send debug message "+str(message))
-    send_text_message(mqtt_topic_debug, message)
 
 def wait_till_online(n_max=100000):
     waiting =True
@@ -850,8 +841,7 @@ def setup_mqtt_connection(intern):
         client.loop_start()
         # Testnachricht senden
         message= str(my_uuid)+"logger started mqtt connection"+" hash"+str(md5_hash)
-        #send_text_message(mqtt_topic_debug,message)
-        send_debug_message(message)
+        send_text_message(mqtt_topic_debug,message)
         print("mqtt has been setup")
     except Exception as e:
         print("not able to connect to mqtt broker ")
@@ -931,7 +921,7 @@ while fail:
         except Exception as e:
             fail= True
             message= str(my_uuid)+" serial port  not ready"+ str(e)
-            send_debug_message(message)
+            send_text_message(mqtt_topic_debug,message)
             #time.sleep(5)
 
 
@@ -995,7 +985,7 @@ def get_disk_space():
 def temp_check():
     temp = get_temp()    
     message=("logger CPU temp "+str(int(temp)))
-    send_debug_message(message)
+    send_text_message(mqtt_topic_debug, message)
     
     print(f"Current CPU temperature: {temp}°C")
     if temp > 80.0:  # Threshold for warning
@@ -1003,10 +993,10 @@ def temp_check():
         while temp > 82.0:
             temp = get_temp()
             message="logger CPU too high, having a break.."
-            send_debug_message(message)
+            send_text_message(mqtt_topic_debug, message)
             time.sleep(1)  # Log every 1 seconds 
             message="..continue"
-            send_text_message(message)
+            send_text_message(mqtt_topic_debug, message)
 
 
 def create_JSON_object(timestamp,UIC_VehicleID,cpu_temp,max_speed,position="",source="default"):
@@ -1151,7 +1141,7 @@ online=True
 retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
 message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
-send_debug_message(message)
+send_text_message(mqtt_topic_debug,message)
 try:
     if os.name == 'nt':
         print("Windows OS detected. Skipping serial port by path check.")
@@ -1160,10 +1150,10 @@ try:
         list=list_serial_interfaces_linux(serial_by_path_dir)
         for port in list:
             message= str("serial port found by path: "+str(port))  
-            send_debug_message(message)     
+            send_text_message(mqtt_topic_debug,message)     
 except IndexError:
     message= "no serial ports found by path"
-    send_debug_message(message)
+    send_text_message(mqtt_topic_debug,message)
 
 try:
     print("waiting for serial messages..")
@@ -1237,8 +1227,8 @@ try:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
                             gps_error_count+=1
-                            send_debug_message( f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ " nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
-                            send_debug_message( f"GPS raw data: "+ str(gps_data))
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ " nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
+                            send_text_message(mqtt_topic_debug, f"GPS raw data: "+ str(gps_data))
                             
                             if  gps_error_count > 60:
                                 #print("GPS error count exceeded 60, restarting GPS process..")
@@ -1247,7 +1237,7 @@ try:
                                 gps_process = Process(target=start_gps_collector, args=(position_queue,))
                                 gps_process.start()
                                 gps_error_count=0
-                                send_debug_message( f"GPS error count exceeded 60, restarting GPS process..")
+                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded 60, restarting GPS process..")
                         
 
                         #print("Received GPS data in main script:")
@@ -1480,7 +1470,7 @@ try:
                         
                                     except Exception as e:
                                         novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                        send_debug_message( str(e)+" "+str(traceback.format_exc()))
+                                        send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                     zero_count = telegram_utf.count('0')
                                     novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
                                     novram_message=add_element(novram_message, "len", "length", str(len(telegram_utf)))
@@ -1502,7 +1492,7 @@ try:
                                     add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count))
                                     add_element(meta_message, "ser_id", "Serial ID", str(ser_id))
                                     add_element(meta_message, "telegram_header", "Telegram Header", telegram_header)
-                                    send_debug_message( meta_message)
+                                    message_counter_raw = send_text_message(mqtt_topic_debug, meta_message)
 
                                 except:
                                     continue
@@ -1538,7 +1528,7 @@ try:
                 message=create_raw_JSON_object(timestamp,UIC_VehicleID,message,"Exception") 
                 message= str(UIC_VehicleID)+" time: "+str(now)+" exception: "+ str(message)
                 if time.time() - last_ex_message_time >= 3:
-                    send_debug_message( message)
+                    send_text_message(mqtt_topic_debug, message)
                     last_ex_message_time = time.time()
 
             #if telegram_hex:
@@ -1551,7 +1541,7 @@ except KeyboardInterrupt:
     print("Measurement stopped by user")
 
 finally:
-    send_debug_message( "logger script stopped at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
+    send_text_message(mqtt_topic_debug, "logger script stopped at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
        
     client.disconnect   
 
