@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.53"
+version="0.0.54"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -744,8 +744,9 @@ def send_json_message(topic, json_message_i,message_counter):
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         json_message=replace_none_with_null(json_message_i)
     except Exception as e:
-        send_text_message(mqtt_topic_debug, "Error replacing None with null: " + str(e))
+        send_text_message(mqtt_topic_debug, "Error send json message: " + str(e))
         send_text_message(mqtt_topic_debug, "type of json_message_i: " + str(type(json_message_i)))
+        json_message=json_message_i
     
     try:
         if validate_json(json_message,schema):
@@ -1115,6 +1116,7 @@ last_gps_speed=0
 last_speed=0
 last_message_time=0
 last_basic_message_time=0
+last_remaining_message_time=0
 last_ex_message_time=0
 last_odo_message_time=0
 last_novram_message_time=0
@@ -1370,13 +1372,7 @@ try:
                             #print("telegram header "+telegram_header+"\t "+str(len(telegram_hex)))
                         num_unprintable_hex = sum(1 for c in telegram_hex if not chr(int(c, 16)).isprintable())
                         num_unprintable_raw = sum(1 for b in telegram_raw if not (chr(b).isprintable() or chr(b) in '\r\n\t'))
-                        meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
-                        add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                        add_element(meta_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                        add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count))
-                        add_element(meta_message, "ser_id", "Serial ID", str(ser_id))
-                        add_element(meta_message, "telegram_header", "Telegram Header", telegram_header)
-                        #message_counter_raw = send_json_message(mqtt_topic_debug, meta_message, message_counter_raw)
+                        
 
 
                         if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
@@ -1488,30 +1484,43 @@ try:
                                 else:
                                     skipped_message +=1
                         else: 
+                            if time.time() - last_remaining_message_time >= conf_status_period:
+                                try:
+                                    meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
+                                    add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                    add_element(meta_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
+                                    add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count))
+                                    add_element(meta_message, "ser_id", "Serial ID", str(ser_id))
+                                    add_element(meta_message, "telegram_header", "Telegram Header", telegram_header)
+                                    message_counter_raw = send_text_message(mqtt_topic_debug, meta_message)
 
-                            try:
+                                except:
+                                    continue
+                                
+                                try:
 
-                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
-                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            except:
-                                continue
-                            try:
-                                telegram_utf=telegram_raw.decode('utf-8')
-                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
-                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   ) 
-                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            except:
-                                continue
-                            try:
-                                raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
-                                add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
-                            except:
-                                continue
+                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
+                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
+                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                except:
+                                    continue
+                                try:
+                                    telegram_utf=telegram_raw.decode('utf-8')
+                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
+                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   ) 
+                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                except:
+                                    continue
+                                try:
+                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
+                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
+                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
+                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, raw_message,message_counter_raw)
+                                except:
+                                    continue
+                                last_remaining_message_time = time.time()#basic message without serial
 
             except Exception as e:
                 print(e)
@@ -1532,7 +1541,8 @@ except KeyboardInterrupt:
     print("Measurement stopped by user")
 
 finally:
-    client.publish(mqtt_topic_debug,str(UIC_VehicleID)+" time: "+str(now)+" logger stopped ")     
+    send_text_message(mqtt_topic_debug, "logger script stopped at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())))
+       
     client.disconnect   
 
     print("Terminating GPS process...")
