@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.50"
+version="0.0.51"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -740,6 +740,7 @@ def ensure_json_serializable(data):
         
 def send_json_message(topic, json_message_i,message_counter):
     try:    
+        json_message=""
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         json_message=replace_none_with_null(json_message_i)
     except Exception as e:
