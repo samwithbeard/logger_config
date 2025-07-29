@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.52"
+version="0.0.53"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -1319,8 +1319,9 @@ try:
                 
 		#retrieve serial data
                 
-                
+                throttle=0.2
                 for ser in sers:
+                    time.sleep(throttle)  # Add a small delay to avoid overwhelming the serial port
                     telegrams=[]
                     data=b""
                     if hasattr(ser, 'port'):
