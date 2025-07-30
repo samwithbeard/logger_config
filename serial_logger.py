@@ -1358,7 +1358,7 @@ try:
                     #time.sleep(1)
 
                     for telegram_raw in telegrams:
-                        send_text_message(mqtt_topic_debug, f"TESTDATA Received telegram from serial port {port_path} (ID: {ser_id}): {telegram_raw.hex()}")
+                        #send_text_message(mqtt_topic_debug, f"TESTDATA Received telegram from serial port {port_path} (ID: {ser_id}): {telegram_raw.hex()}")
                         #print("telegram_raw "+str(telegram_raw)) #novram is shown here as plaintext
                         telegram_hex=telegram_raw.hex() #odo is usable as hex
                         #print("telegram_hex "+str(telegram_hex))
