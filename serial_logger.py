@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.68"
+version="0.0.69"
 print(version)
 
 import hashlib
@@ -926,7 +926,7 @@ while fail:
         try:
             target_description = "USB-SERIAL CH340"  # Beispielhafte Beschreibung
             sers = find_serial_adapters(target_description)
-            sers2 = find_serial_adapters("usb", directory = '/dev/serial/by-path/')
+            sers2 = find_serial_adapters("/", directory = '/dev/serial/by-path/')
             fail= False            
             
         except Exception as e:
