@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.65"
+version="0.0.66"
 print(version)
 
 import hashlib
@@ -1359,6 +1359,8 @@ try:
 
                     for telegram_raw in telegrams:
                         #send_text_message(mqtt_topic_debug, f"TESTDATA Received telegram from serial port {port_path} (ID: {ser_id}): {telegram_raw.hex()}")
+                        sdmu_port="/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0"
+                        core_port="/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0"
                         #print("telegram_raw "+str(telegram_raw)) #novram is shown here as plaintext
                         telegram_hex=telegram_raw.hex() #odo is usable as hex
                         #print("telegram_hex "+str(telegram_hex))
@@ -1387,7 +1389,8 @@ try:
                         num_unprintable_hex = sum(1 for c in telegram_hex if not chr(int(c, 16)).isprintable())
                         num_unprintable_raw = sum(1 for b in telegram_raw if not (chr(b).isprintable() or chr(b) in '\r\n\t'))
                         
-                        if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
+                        if port_path==sdmu_port and (telegram_header == "1a6b" or icn_count>1):#sdmu frame
+                        #if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
                             odo_icn_classified+=1
                             #print("telegram 1a6b")
                             test_frame = "08401b031b02441909b5000000a600000002cedb7e83040100002b8a2b7a2b612b5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000050000002b862b6f2b6f2b7c2b8200000000000000000000000000000000000000000000000000000000000000000000000000000000050211671b5500000000000000690000ff02ff02ca44e705049c0032200000a2330e00021f6e000220c201bd0005000400021"
@@ -1448,7 +1451,7 @@ try:
                                     #print(lineid + " "+line[0:22]+ " len: " +str(len(line))+" speed "+str(rad_speed)+" max "+str(max_speed)+ " zeros "+ str(zero_count))
 
                             #print("all lines")
-                        elif telegram_header == "09b5":#special frame ODO Yverdon
+                        elif port_path==sdmu_port and telegram_header == "09b5":#special frame ODO Yverdon
                             odo_other_classified+=1
                             #print("telegram l 346")
                             c=telegram_hex.count("0")
@@ -1460,7 +1463,8 @@ try:
                             message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,"ODO 09b5")                     
                             #message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
-                        elif num_unprintable_hex < 1 and num_unprintable_raw < 1 and len(telegram_hex) > 10 and icn_count < 1: #if no header found, check if telegram is printable
+                        elif port_path==core_port and len(telegram_hex) > 3:
+                        #num_unprintable_hex < 1 and num_unprintable_raw < 1 and len(telegram_hex) > 10 and icn_count < 1: #if no header found, check if telegram is printable
                             novram_classified+=1
                             # CORE NOVRAM: Only process if all characters are printable (or whitespace)                        
                            
@@ -1504,7 +1508,7 @@ try:
                             
                             if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
                                 try:                                
-                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+"odoframes"+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
+                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+"odoframes"+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" serial_device: "+str(port_path)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
                                     unclassified_telegrams = 0
                                     novram_classified=0
                                     odo_icn_classified=0
