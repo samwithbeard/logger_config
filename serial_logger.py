@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.60"
+version="0.0.61"
 print(version)
 
 import hashlib
@@ -773,6 +773,15 @@ def send_text_message(topic, message):
     except Exception as e:
         print("fail to send "+str(message) + str(e))
 
+def send_debug_message(message):
+    throttle=1
+    if time.now().second % throttle != 0:
+        print("throttle debug message")
+        return
+    message=" time:"+str(datetime.now())+" uuid:"+str(my_uuid)+" vehicle: "+str(UIC_VehicleID)+" version: "+str(version)+" /n"+str(message)+"/n"
+    print("send debug message "+str(message))
+    send_text_message(mqtt_topic_debug, message)
+
 def wait_till_online(n_max=100000):
     waiting =True
     print("wait until we are online...")
@@ -841,6 +850,7 @@ def setup_mqtt_connection(intern):
         # Testnachricht senden
         message= str(my_uuid)+"logger started mqtt connection"+" hash"+str(md5_hash)
         send_text_message(mqtt_topic_debug,message)
+        send_debug_message(message)
         print("mqtt has been setup")
     except Exception as e:
         print("not able to connect to mqtt broker ")
@@ -1120,6 +1130,7 @@ last_ex_message_time=0
 last_odo_message_time=0
 last_novram_message_time=0
 skipped_message = 0
+unclassified_telegrams = 0
 deviation_to_send = conf_dbr_odo # only send message if speed changes more than 0.5 km/h
 time_threshold = conf_min_time_odo  # time threshold in seconds
 message_counter=0 
@@ -1484,9 +1495,10 @@ try:
                                 else:
                                     skipped_message +=1
                         else: 
+                            unclassified_telegrams += 1
                             if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
                                 try:                                
-                                    send_text_message(mqtt_topic_debug, "META unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header))
+                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header))
                                 except Exception as e:
                                     print("Error sending debug message:", e)
                                     send_text_message(mqtt_topic_debug, "Error sending debug message: "+str(e))
