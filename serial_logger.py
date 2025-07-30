@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.58"
+version="0.0.59"
 print(version)
 
 import hashlib
@@ -1485,7 +1485,11 @@ try:
                                     skipped_message +=1
                         else: 
                             if time.time() - last_remaining_message_time >= conf_status_period:
-                                send_text_message(mqtt_topic_debug, "META")
+                                try:                                
+                                    send_text_message(mqtt_topic_debug, "META unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header))
+                                except Exception as e:
+                                    print("Error sending debug message:", e)
+                                    send_text_message(mqtt_topic_debug, "Error sending debug message: "+str(e))
                                 try:
                                     meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
                                     add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
