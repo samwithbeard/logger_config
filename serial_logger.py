@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.67"
+version="0.0.68"
 print(version)
 
 import hashlib
@@ -894,7 +894,7 @@ def find_serial_adapters(target_description, directory = '/dev/serial/by-id/'):
     sers=[]
     if os.name != 'nt':
         print("not windows")
-        port_list=list_serial_interfaces_linux(directory = '/dev/serial/by-id/')
+        port_list=list_serial_interfaces_linux(directory)
         try:
             for port in port_list:
                 sers.append(serial.Serial(port, 115200, timeout=1))
@@ -926,7 +926,7 @@ while fail:
         try:
             target_description = "USB-SERIAL CH340"  # Beispielhafte Beschreibung
             sers = find_serial_adapters(target_description)
-            sers2 = find_serial_adapters(target_description, directory = '/dev/serial/by-path/')
+            sers2 = find_serial_adapters("usb", directory = '/dev/serial/by-path/')
             fail= False            
             
         except Exception as e:
