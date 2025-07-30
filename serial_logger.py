@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.66"
+version="0.0.67"
 print(version)
 
 import hashlib
@@ -889,12 +889,12 @@ def list_serial_interfaces_linux(directory = '/dev/serial/by-id/'):
 
 
 
-def find_serial_adapters(target_description):
+def find_serial_adapters(target_description, directory = '/dev/serial/by-id/'):
     ports=[]
     sers=[]
     if os.name != 'nt':
         print("not windows")
-        port_list=list_serial_interfaces_linux()
+        port_list=list_serial_interfaces_linux(directory = '/dev/serial/by-id/')
         try:
             for port in port_list:
                 sers.append(serial.Serial(port, 115200, timeout=1))
@@ -920,11 +920,13 @@ def find_serial_adapters(target_description):
             sers.append(serial.Serial(port, 115200, timeout=1))
     return sers
 sers=[]
+sers2=[]
 fail=True
 while fail:
         try:
             target_description = "USB-SERIAL CH340"  # Beispielhafte Beschreibung
             sers = find_serial_adapters(target_description)
+            sers2 = find_serial_adapters(target_description, directory = '/dev/serial/by-path/')
             fail= False            
             
         except Exception as e:
@@ -1143,6 +1145,14 @@ last_basic_message=""
 gps_error_count=0
 # flush serial buffer on startup
 print("flushing serial buffer..")
+for ser in sers2:
+    if hasattr(ser, 'port'):
+        port_path = ser.port
+    else:
+        port_path = str(ser)
+    message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" path: "+str(port_path)
+    send_text_message(mqtt_topic_debug,message)        
+
 for ser in sers:
     data = b""
     while ser.in_waiting > 0:
@@ -1508,7 +1518,7 @@ try:
                             
                             if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
                                 try:                                
-                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+"odoframes"+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" serial_device: "+str(port_path)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
+                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" odoframes "+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" serial_device: "+str(port_path)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
                                     unclassified_telegrams = 0
                                     novram_classified=0
                                     odo_icn_classified=0
