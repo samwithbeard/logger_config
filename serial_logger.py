@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+version="0.0.58"
+print(version)
 
 import hashlib
 import serial
@@ -76,9 +78,6 @@ else:
 
 led = LED(6)
 led.off()
-
-version="0.0.57"
-print(version)
 logging_active=False
 startup_sleep=1
 print("wait "+str(startup_sleep)+"s for startup..")
@@ -1321,7 +1320,7 @@ try:
                 
 		#retrieve serial data
                 
-                throttle=0.2
+                throttle=1
                 for ser in sers:
                     time.sleep(throttle)  # Add a small delay to avoid overwhelming the serial port
                     telegrams=[]
@@ -1393,17 +1392,19 @@ try:
                                 timestamp_fzdia = datetime.now().isoformat() + "Z"
                                 message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
                                 #message = add_element(message, "serial_id", "Serial ID", str(ser_id))
-                                message = add_odo_frame(message, parsed_frame)
                                 
-                                speed = float(parsed_frame['speed'])
+                                speed = float(last_gps_speed)# float(parsed_frame['speed'])
                                 current_time = time.time()
                                 if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
+                                    last_odo_message_time = current_time
+                                    message = add_odo_frame(message, parsed_frame)
+                                    #print("speed changed "+str(speed)+" last speed "+str(last_speed)+" deviation "+
                                     message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
-                                    message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
+                                    #message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
                                     #print("message_raw "+str(message_raw))                                    
-                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
+                                    #message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                     last_speed = speed
-                                    last_odo_message_time = current_time                           
+                                                             
                                 
 
                             message=str(my_uuid)+" t1a6b "+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_hex)+"\t"+str(telegram_hex)
@@ -1445,8 +1446,7 @@ try:
                             message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
                         elif num_unprintable_hex < 1 and num_unprintable_raw < 1 and len(telegram_hex) > 10 and icn_count < 1: #if no header found, check if telegram is printable
-                            # CORE NOVRAM: Only process if all characters are printable (or whitespace)
-                        
+                            # CORE NOVRAM: Only process if all characters are printable (or whitespace)                        
                            
                             if len(telegram_raw)>0:
                                 #print("no header found-> plain text len"+str(len(telegram_raw))+" time "+timestamp+" telegram: "+str(telegram_raw))
