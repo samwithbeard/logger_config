@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.61"
+version="0.0.62"
 print(version)
 
 import hashlib
@@ -1496,9 +1496,11 @@ try:
                                     skipped_message +=1
                         else: 
                             unclassified_telegrams += 1
+                            
                             if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
                                 try:                                
-                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header))
+                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header)+" len"+str(len(telegram_raw)))
+                                    unclassified_telegrams = 0
                                 except Exception as e:
                                     print("Error sending debug message:", e)
                                     send_text_message(mqtt_topic_debug, "Error sending debug message: "+str(e))
