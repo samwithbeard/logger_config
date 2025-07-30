@@ -77,7 +77,7 @@ else:
 led = LED(6)
 led.off()
 
-version="0.0.56"
+version="0.0.57"
 print(version)
 logging_active=False
 startup_sleep=1
@@ -722,7 +722,7 @@ def replace_none_with_null(data):
             return str(data)
     except Exception as e:
         print(f"Error replacing None with null: {e}")
-        raise ValueError(f"Data is not JSON serializable: {e}")
+        raise ValueError(f"Data is not JSON serializable: {e}"+str(data))
 
 def ensure_json_serializable(data):
     """
