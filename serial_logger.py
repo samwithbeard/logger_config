@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.59"
+version="0.0.60"
 print(version)
 
 import hashlib
@@ -1399,10 +1399,10 @@ try:
                                     last_odo_message_time = current_time
                                     message = add_odo_frame(message, parsed_frame)
                                     #print("speed changed "+str(speed)+" last speed "+str(last_speed)+" deviation "+
-                                    message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
-                                    #message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
+                                    #message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
+                                    message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
                                     #print("message_raw "+str(message_raw))                                    
-                                    #message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
+                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                     last_speed = speed
                                                              
                                 
@@ -1484,7 +1484,7 @@ try:
                                 else:
                                     skipped_message +=1
                         else: 
-                            if time.time() - last_remaining_message_time >= conf_status_period:
+                            if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
                                 try:                                
                                     send_text_message(mqtt_topic_debug, "META unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" ser_id: "+str(ser_id)+" telegram header: "+str(telegram_header))
                                 except Exception as e:
