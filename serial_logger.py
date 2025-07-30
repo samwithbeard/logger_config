@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.64"
+version="0.0.65"
 print(version)
 
 import hashlib
