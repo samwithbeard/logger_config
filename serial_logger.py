@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.63"
+version="0.0.64"
 print(version)
 
 import hashlib
@@ -1358,6 +1358,7 @@ try:
                     #time.sleep(1)
 
                     for telegram_raw in telegrams:
+                        send_text_message(mqtt_topic_debug, f"TESTDATA Received telegram from serial port {port_path} (ID: {ser_id}): {telegram_raw.hex()}")
                         #print("telegram_raw "+str(telegram_raw)) #novram is shown here as plaintext
                         telegram_hex=telegram_raw.hex() #odo is usable as hex
                         #print("telegram_hex "+str(telegram_hex))
@@ -1386,8 +1387,6 @@ try:
                         num_unprintable_hex = sum(1 for c in telegram_hex if not chr(int(c, 16)).isprintable())
                         num_unprintable_raw = sum(1 for b in telegram_raw if not (chr(b).isprintable() or chr(b) in '\r\n\t'))
                         
-
-
                         if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
                             odo_icn_classified+=1
                             #print("telegram 1a6b")
