@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.71"
+version="0.0.72"
 print(version)
 
 import hashlib
@@ -774,8 +774,12 @@ def send_text_message(topic, message):
         print("fail to send "+str(message) + str(e))
 
 def send_debug_message(message):
-    message=" time:"+str(datetime.now())+" uuid:"+str(my_uuid)+" vehicle: "+str(UIC_VehicleID)+" version: "+str(version)+" /n"+str(message)+"/n"
-    message=message[:1000]  # Limit message length to 1000 characters
+    message=" time:"+str(datetime.now())+" uuid:"+str(my_uuid)+" vehicle: "+str(UIC_VehicleID)+" version: "+str(version)+" message: "+str(message)+" .end."
+    l=1000
+    if len(message) > l: 
+        message = message[:l]+"[...]"+str(len(message)-1000)  # Limit message length to 1000 characters
+    #message = message.replace('\n',
+    #message=message[:1000]  # Limit message length to 1000 characters
     print("send debug message "+str(message))
     send_text_message(mqtt_topic_debug, message)
 
@@ -847,7 +851,6 @@ def setup_mqtt_connection(intern):
         # Testnachricht senden
         message= str(my_uuid)+"logger started mqtt connection"+" hash"+str(md5_hash)
         send_text_message(mqtt_topic_debug,message)
-        send_debug_message(message)
         print("mqtt has been setup")
     except Exception as e:
         print("not able to connect to mqtt broker ")
@@ -1161,7 +1164,7 @@ data = b""
 online=True
 retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
-message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
+message= "logger script " +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
 send_debug_message(message)
 try:
