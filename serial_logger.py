@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.69"
+version="0.0.70"
 print(version)
 
 import hashlib
@@ -871,7 +871,7 @@ client=setup_mqtt_connection(intern)
 
 
 
-def list_serial_interfaces_linux(directory = '/dev/serial/by-id/'):
+def list_serial_interfaces_linux(adapter_name_start='usb-1a86_',directory = '/dev/serial/by-id/'):
     
     ports=[]
     if os.path.exists(directory) and os.path.isdir(directory):
@@ -879,7 +879,7 @@ def list_serial_interfaces_linux(directory = '/dev/serial/by-id/'):
         if files:
             print("Available serial interfaces:")
             for filename in files:
-                if filename.startswith('usb-1a86_'):
+                if filename.startswith(adapter_name_start):
                     ports.append(os.path.join(directory, filename))
                     
         else:
@@ -894,7 +894,7 @@ def find_serial_adapters(target_description, directory = '/dev/serial/by-id/'):
     sers=[]
     if os.name != 'nt':
         print("not windows")
-        port_list=list_serial_interfaces_linux(directory)
+        port_list=list_serial_interfaces_linux(target_description, directory)
         try:
             for port in port_list:
                 sers.append(serial.Serial(port, 115200, timeout=1))
@@ -925,8 +925,9 @@ fail=True
 while fail:
         try:
             target_description = "USB-SERIAL CH340"  # Beispielhafte Beschreibung
+            target_description = 'usb-1a86_'  # adapter nme by id unter linux
             sers = find_serial_adapters(target_description)
-            sers2 = find_serial_adapters("/", directory = '/dev/serial/by-path/')
+            sers2 = find_serial_adapters("-", directory = '/dev/serial/by-path/')
             fail= False            
             
         except Exception as e:
@@ -1165,6 +1166,7 @@ retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
 message= "logger script" +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
+send_debug_message(message)
 try:
     if os.name == 'nt':
         print("Windows OS detected. Skipping serial port by path check.")
