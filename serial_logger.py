@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.72"
+version="0.0.73"
 print(version)
 
 import hashlib
@@ -743,10 +743,9 @@ def send_json_message(topic, json_message_i,message_counter):
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         json_message=replace_none_with_null(json_message_i)
     except Exception as e:
-        send_text_message(mqtt_topic_debug, "Error send json message: " + str(e))
-        send_text_message(mqtt_topic_debug, "type of json_message_i: " + str(type(json_message_i)))
-        json_message=json_message_i
-    
+        send_debug_message("Error send json message: " + str(e))
+        send_debug_message("type of json_message_i: " + str(type(json_message_i)))
+        json_message=json_message_i    
     try:
         if validate_json(json_message,schema):
             message=json.dumps(json_message)
