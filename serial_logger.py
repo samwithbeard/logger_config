@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.73"
+version="0.0.74"
 print(version)
 
 import hashlib
@@ -1397,9 +1397,7 @@ try:
                         #telegram_header = "1a6b" 
                         #if len(telegram_hex)>0:
                             #print("telegram header "+telegram_header+"\t "+str(len(telegram_hex)))
-                        num_unprintable_hex = sum(1 for c in telegram_hex if not chr(int(c, 16)).isprintable())
-                        num_unprintable_raw = sum(1 for b in telegram_raw if not (chr(b).isprintable() or chr(b) in '\r\n\t'))
-                        
+
                         if port_path==sdmu_port and (telegram_header == "1a6b" or icn_count>1):#sdmu frame
                         #if telegram_header == "1a6b" or icn_count>1:#main odo frame yvverdon
                             odo_icn_classified+=1
@@ -1427,10 +1425,10 @@ try:
                                     last_odo_message_time = current_time
                                     message = add_odo_frame(message, parsed_frame)
                                     #print("speed changed "+str(speed)+" last speed "+str(last_speed)+" deviation "+
-                                    #message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
+            ######odo>###############message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
                                     message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
                                     #print("message_raw "+str(message_raw))                                    
-                                    message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
+            ######odo>##############message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                     last_speed = speed
                                                              
                                 
@@ -1516,53 +1514,20 @@ try:
                                     skipped_message +=1
                         else: 
                             unclassified_telegrams += 1
+
+                        #sending statistics about sent messages    
+                        if time.time() - last_remaining_message_time >= conf_status_period :
+                            try:                                
+                                send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" odoframes "+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
+                                unclassified_telegrams = 0
+                                novram_classified=0
+                                odo_icn_classified=0
+                                odo_other_classified=0
+                            except Exception as e:
+                                print("Error sending debug message:", e)                                
                             
-                            if time.time() - last_remaining_message_time >= conf_status_period or num_unprintable_raw > 0 :
-                                try:                                
-                                    send_text_message(mqtt_topic_debug, "META unclassified telegrams: "+str(unclassified_telegrams)+" odoframes "+str(odo_icn_classified+odo_other_classified)+" novram classified "+str(novram_classified)+" unprintable hex: "+str(num_unprintable_hex)+" unprintable raw: "+str(num_unprintable_raw)+" icn count: "+str(icn_count)+" serial_device: "+str(port_path)+" telegram header: "+str(telegram_header)+" len "+str(len(telegram_hex)))
-                                    unclassified_telegrams = 0
-                                    novram_classified=0
-                                    odo_icn_classified=0
-                                    odo_other_classified=0
-                                except Exception as e:
-                                    print("Error sending debug message:", e)
-                                    send_text_message(mqtt_topic_debug, "Error sending debug message: "+str(e))
-                                try:
-                                    meta_message=create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data,source="META")
-                                    add_element(meta_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                    add_element(meta_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                    add_element(meta_message, "icn_count", "ICN Separator Count", str(icn_count))
-                                    add_element(meta_message, "ser_id", "Serial ID", str(ser_id))
-                                    add_element(meta_message, "telegram_header", "Telegram Header", telegram_header)
-                                    message_counter_raw = send_text_message(mqtt_topic_debug, meta_message)
-
-                                except:
-                                    continue
-                                
-                                try:
-
-                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(telegram_raw),gps_data,source="RAW bin")
-                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                    send_text_message(mqtt_topic_debug, raw_message)
-                                except:
-                                    continue
-                                try:
-                                    telegram_utf=telegram_raw.decode('utf-8')
-                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf,gps_data,source="RAW utf")
-                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   ) 
-                                    send_text_message(mqtt_topic_debug, raw_message)
-                                except:
-                                    continue
-                                try:
-                                    raw_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="RAW hex")
-                                    add_element(raw_message, "unprintable_hex", "Unprintable Hex Count", str(num_unprintable_hex)   )
-                                    add_element(raw_message, "unprintable_raw", "Unprintable Raw Count", str(num_unprintable_raw)   )
-                                    send_text_message(mqtt_topic_debug, raw_message)
-                                except:
-                                    continue
-                                last_remaining_message_time = time.time()#basic message without serial
+                            
+                            last_remaining_message_time = time.time()#basic message without serial
 
             except Exception as e:
                 print(e)
