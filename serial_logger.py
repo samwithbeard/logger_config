@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.74"
+version="0.0.75"
 print(version)
 
 import hashlib
@@ -1140,7 +1140,10 @@ deviation_to_send = conf_dbr_odo # only send message if speed changes more than 
 time_threshold = conf_min_time_odo  # time threshold in seconds
 message_counter=0 
 message_counter_raw=0   
-Latitude, Longitude, gm_link=(0,0,"")                           
+Latitude, Longitude, gm_link=(0,0,"")  
+num_satellites=0          
+fix_mode=0 
+fix_quality=0              
 last_basic_message=""
 gps_error_count=0
 # flush serial buffer on startup
@@ -1424,9 +1427,10 @@ try:
                                 if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
                                     last_odo_message_time = current_time
                                     message = add_odo_frame(message, parsed_frame)
+                                    print("no odo frame is beeing sent (commented out since it is empty on the test vehicle TODO: re implement)")
                                     #print("speed changed "+str(speed)+" last speed "+str(last_speed)+" deviation "+
             ######odo>###############message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
-                                    message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
+                                    #message_raw=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_hex,gps_data,source="ODO_RAW")                     
                                     #print("message_raw "+str(message_raw))                                    
             ######odo>##############message_counter_raw=send_json_message(mqtt_topic_raw_odo, message_raw, message_counter)
                                     last_speed = speed
