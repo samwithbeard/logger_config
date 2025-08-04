@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.76"
+version="0.0.77"
 print(version)
 
 import hashlib
@@ -707,21 +707,30 @@ def replace_none_with_null(data):
 
     :param data: The JSON object to process.
     :return: The modified JSON object with None replaced by 'null'.
+
     """
-    try:
+    step=0
+    try:    
         if isinstance(data, dict):
+            step=1
             return {key: replace_none_with_null(value) for key, value in data.items()}
         elif isinstance(data, list):
+            step=2
             return [replace_none_with_null(item) for item in data]
         elif data is None:
+            step=3
             return None  # Keep it as None, as JSON serialization will handle it correctly
         elif isinstance(data, (str, int, float, bool)):
+            step=4
             return data
         else:
+            step=5
             return str(data)
     except Exception as e:
         print(f"Error replacing None with null: {e}")
-        raise ValueError(f"Error replacing None with null: exc: {e} data: "+str(data))
+        #return str(data)
+        raise ValueError(f"Error in step "+str(step)+" replacing None with null: exc: {e} debugdata: "+str(data))
+    
 
 def ensure_json_serializable(data):
     """
@@ -744,6 +753,12 @@ def send_json_message(topic, json_message_i,message_counter):
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
         validate_json(json_message_i, schema)
         print("json_message_i: "+str(json_message_i))
+        if os.name == 'nt':             
+            print("Windows OS detected. simulate data")
+            real_data=json_message_i
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z','sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
+        
+
         json_message=replace_none_with_null(json_message_i)
         validate_json(json_message_i, schema)
         print("json_message_i: "+str(json_message_i))
