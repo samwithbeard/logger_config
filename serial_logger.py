@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.79"
+version="0.0.80"
 print(version)
 
 import hashlib
@@ -1272,17 +1272,18 @@ try:
                             #print("Error parsing GPS data:", e)
                             #Latitude, Longitude, gm_link = (0, 0, "")
                             gps_error_count+=1
-                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ " nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
+                            MAX_GPS_ERROR_COUNT=600
+                            send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " errors till restart: "+str(MAX_GPS_ERROR_COUNT - gps_error_count) +" num sat: "+str(num_satellites)+ " fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
                             send_text_message(mqtt_topic_debug, f"GPS raw data: "+ str(gps_data))
                             
-                            if  gps_error_count > 500:
-                                #print("GPS error count exceeded 500, restarting GPS process..")
+                            if  gps_error_count > MAX_GPS_ERROR_COUNT:
+                                #print("GPS error count exceeded "+MAX_GPS_ERROR_COUNT+", restarting GPS process..")
                                 gps_process.terminate()
                                 gps_process.join()
                                 gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
                                 gps_process.start()
                                 gps_error_count=0
-                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded 60, restarting GPS process..")
+                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded "+MAX_GPS_ERROR_COUNT+", restarting GPS process..")
                         
 
                         #print("Received GPS data in main script:")
