@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.78"
+version="0.0.79"
 print(version)
 
 import hashlib
@@ -749,20 +749,16 @@ def ensure_json_serializable(data):
 def send_json_message(topic, json_message_i,message_counter):
     try:    
         json_message=""
-        validate_json(json_message_i, schema)
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-        validate_json(json_message_i, schema)
-        print("json_message_i: "+str(json_message_i))
         if os.name == 'nt':             
             print("Windows OS detected. simulate data")
             real_data=json_message_i
             json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
-            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': 68.1},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
 
         #json_message=replace_none_with_null(json_message_i)
         json_message=json_message_i
-        validate_json(json_message_i, schema)
-        print("json_message_i: "+str(json_message_i))
+      
         
     except Exception as e:
         send_debug_message("Error send json message: " + str(e))
@@ -1279,11 +1275,11 @@ try:
                             send_text_message(mqtt_topic_debug, f"Error parsing GPS data: {e}"+ str(Latitude)+" "+str(Longitude)+" "+str(gm_link)+ " error count:"+str(gps_error_count)+ " nummer of satellites: "+str(num_satellites)+ "fix mode: "+str(fix_mode)+ " fix quality: "+str(fix_quality))
                             send_text_message(mqtt_topic_debug, f"GPS raw data: "+ str(gps_data))
                             
-                            if  gps_error_count > 60:
-                                #print("GPS error count exceeded 60, restarting GPS process..")
+                            if  gps_error_count > 500:
+                                #print("GPS error count exceeded 500, restarting GPS process..")
                                 gps_process.terminate()
                                 gps_process.join()
-                                gps_process = Process(target=start_gps_collector, args=(position_queue,))
+                                gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
                                 gps_process.start()
                                 gps_error_count=0
                                 send_text_message(mqtt_topic_debug, f"GPS error count exceeded 60, restarting GPS process..")
@@ -1538,26 +1534,16 @@ try:
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
                                     
                                     novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                    validate_json(novram_message,schema)
-                                    print(str(novram_message))
                                           
                                     try:
                                         novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))
-                                        validate_json(novram_message,schema)
-                                        print(str(novram_message))
                                     except Exception as e:
                                         novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                         send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                     zero_count = telegram_utf.count('0')
                                     novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
-                                    validate_json(novram_message,schema)
-                                    print(str(novram_message))
                                     novram_message=add_element(novram_message, "len", "length", str(len(telegram_utf)))
-                                    validate_json(novram_message,schema)
-                                    print(str(novram_message))
                                     novram_message=add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                    validate_json(novram_message,schema)
-                                    print(str(novram_message))
                                     if zero_count > 10:
                                         message_counter_raw=send_json_message(mqtt_topic_odo, novram_message,message_counter_raw)
                                     else: 
