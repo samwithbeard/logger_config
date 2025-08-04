@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.77"
+version="0.0.78"
 print(version)
 
 import hashlib
@@ -729,7 +729,7 @@ def replace_none_with_null(data):
     except Exception as e:
         print(f"Error replacing None with null: {e}")
         #return str(data)
-        raise ValueError(f"Error in step "+str(step)+" replacing None with null: exc: {e} debugdata: "+str(data))
+        raise ValueError(f"Error in step "+str(step)+" replacing None with null. type:"+str(type(data))+" exc: {e} debugdata: "+str(data))
     
 
 def ensure_json_serializable(data):
@@ -756,10 +756,11 @@ def send_json_message(topic, json_message_i,message_counter):
         if os.name == 'nt':             
             print("Windows OS detected. simulate data")
             real_data=json_message_i
-            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z','sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
-        
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': 68.1},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
 
-        json_message=replace_none_with_null(json_message_i)
+        #json_message=replace_none_with_null(json_message_i)
+        json_message=json_message_i
         validate_json(json_message_i, schema)
         print("json_message_i: "+str(json_message_i))
         
