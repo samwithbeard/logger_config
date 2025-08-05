@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.80"
+version="0.0.81"
 print(version)
 
 import hashlib
@@ -1283,7 +1283,7 @@ try:
                                 gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
                                 gps_process.start()
                                 gps_error_count=0
-                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded "+MAX_GPS_ERROR_COUNT+", restarting GPS process..")
+                                send_text_message(mqtt_topic_debug, f"GPS error count exceeded "+str(MAX_GPS_ERROR_COUNT)+", restarting GPS process..")
                         
 
                         #print("Received GPS data in main script:")
@@ -1454,7 +1454,7 @@ try:
                             #print(f"Count of '1b0244' in the telegram hex string: {count}")
                             
                             for line in lines:
-                                frame, splitted_line, parsed_frame = parse_ICN_line(line)
+                                frame, splitted_line, parsed_frame = ("","","")#parse_ICN_line(line)
                                 timestamp_fzdia = datetime.now().isoformat() + "Z"
                                 message = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data, source="ODO")
                                 #message = add_element(message, "serial_id", "Serial ID", str(ser_id))
@@ -1463,7 +1463,7 @@ try:
                                 current_time = time.time()
                                 if abs(speed - last_speed) > deviation_to_send or (current_time - last_odo_message_time) > time_threshold:
                                     last_odo_message_time = current_time
-                                    message = add_odo_frame(message, parsed_frame)
+                                    #message = add_odo_frame(message, parsed_frame)
                                     print("no odo frame is beeing sent (commented out since it is empty on the test vehicle TODO: re implement)")
                                     #print("speed changed "+str(speed)+" last speed "+str(last_speed)+" deviation "+
             ######odo>###############message_counter=send_json_message(mqtt_topic_odo, message,message_counter)                                            
