@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.83"
+version="0.0.84"
 print(version)
 
 import hashlib
@@ -738,36 +738,54 @@ def replace_none_with_null(data):
         print(f"Error replacing None with null: {e}")
         #return str(data)
         raise ValueError(f"Error in step "+str(step)+" replacing None with null. type:"+str(type(data))+" exc: {e} debugdata: "+str(data))
-    
-def send_json_to_ftp(ftp_host, ftp_user, ftp_password, json_data, remote_filename):
-    # Convert the JSON data to a string
-    json_string = json.dumps(json_data)
 
-    # Use a BytesIO buffer to simulate a file
-    with io.BytesIO(json_string.encode('utf-8')) as file_buffer:
-        try:
-            # Connect to the FTP server
-            with ftplib.FTP(ftp_host) as ftp:
-                ftp.login(ftp_user, ftp_password)
-                # Store the file in the FTP server
-                ftp.storbinary(f'STOR {remote_filename}', file_buffer)
-            print(f'Successfully sent JSON data to {remote_filename} on FTP server.')
-        except ftplib.all_errors as e:
-            print(f'FTP error: {e}')
-
-def send_string_to_ftp(ftp_host, ftp_user, ftp_password, data_string, remote_filename):
-    # Use a BytesIO buffer to simulate a file
+def send_string_to_ftp(ftp_host, ftp_user, ftp_password, data_string, remote_dir, remote_filename):
     data_string = str(data_string)
-    with io.BytesIO(data_string.encode('utf-8')) as file_buffer:
-        try:
-            # Connect to the FTP server
-            with ftplib.FTP(ftp_host) as ftp:
-                ftp.login(ftp_user, ftp_password)
-                # Store the file in the FTP server
-                ftp.storbinary(f'STOR {remote_filename}', file_buffer)
-            print(f'Successfully sent data to {remote_filename} on FTP server.')
-        except ftplib.all_errors as e:
-            print(f'FTP error: {e}')
+    try:
+        # Connect to the FTP server
+        with ftplib.FTP(ftp_host) as ftp:
+            ftp.login(ftp_user, ftp_password)
+
+            # Attempt to change to the specified directory
+            try:
+                ftp.cwd(remote_dir)
+            except ftplib.error_perm:
+                # If the directory does not exist, create it
+                ftp.mkd(remote_dir)
+                ftp.cwd(remote_dir)  # Change to the new directory
+
+            # Use a BytesIO buffer to simulate a file
+            with io.BytesIO(data_string.encode('utf-8')) as file_buffer:
+                # Store the file in the FTP server with a .tmp extension
+                tmp_filename = f"{remote_filename}.tmp"
+                ftp.storbinary(f'STOR {tmp_filename}', file_buffer)
+
+            # Attempt to rename the file to the desired filename
+            try:
+                # Check if the target filename already exists; if so, skip renaming
+                if not remote_filename in ftp.nlst():                   
+     
+                    ftp.rename(tmp_filename, remote_filename)
+                    print(f'Successfully sent data to {remote_dir}/{remote_filename} on FTP server.')
+                else:
+                    # If renaming fails, find a unique filename
+                    base, ext = os.path.splitext(remote_filename)
+                    counter = 1
+                    new_filename = f"{base}({counter}){ext}"
+                    
+                    while new_filename in ftp.nlst() and counter < 1000:  # Limit to 1000 attempts
+                        counter += 1
+                        new_filename = f"{base}({counter}){ext}"
+                
+                    ftp.rename(tmp_filename, new_filename)
+                    print(f'Successfully renamed to {remote_dir}/{new_filename} on FTP server.')
+                    
+            except ftplib.error_perm:
+                print(f'Failed to rename {tmp_filename} to {new_filename}. It may already exist.')
+                
+
+    except ftplib.all_errors as e:
+        print(f'FTP error: {e}')
 
 
 def ensure_json_serializable(data):
@@ -1226,7 +1244,7 @@ message= "logger script " +str(version)+" loop starting at "+str(time.strftime('
 send_text_message(mqtt_topic_debug,message)
 send_debug_message(message)
 
-send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"_"+str(int(time.time()))+"logger_startup.txt")
+send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/",str(UIC_VehicleID)+"_"+str(int(time.time()))+"logger_startup.txt")
 
 try:
     if os.name == 'nt':
@@ -1594,7 +1612,8 @@ try:
                                         message_counter_raw=send_json_message(mqtt_topic_odo, novram_message,message_counter_raw)
                                     else: 
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"/"+str(int(time.time()))+"NOVRAM.txt")
+                                    day=time.strftime('%Y-%m-%d', time.localtime())
+                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
                                     last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
