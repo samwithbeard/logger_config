@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.82"
+version="0.0.83"
 print(version)
 
 import hashlib
@@ -26,6 +26,8 @@ import subprocess
 import psutil
 from enum import Enum
 import threading
+import ftplib
+import io
 
 
 if os.name == 'posix':  # Check if the operating system is Linux
@@ -232,6 +234,12 @@ mqtt_broker_intern = config.get('credentials', 'mqtt_broker_intern')
 mqtt_broker_outside = config.get('credentials', 'mqtt_broker_outside')
 default_vehicle_id = config.get('credentials', 'default_vehicle_id')
 sim_pin = config.get('credentials', 'sim_pin')
+
+# FTP server configuration
+
+ftp_host="ftp.carres.ch"
+ftp_user="carresch"
+ftp_password="9948Wragabrr%"
 
 # read public Configuration parameter
 config_p = ConfigParser()
@@ -731,6 +739,36 @@ def replace_none_with_null(data):
         #return str(data)
         raise ValueError(f"Error in step "+str(step)+" replacing None with null. type:"+str(type(data))+" exc: {e} debugdata: "+str(data))
     
+def send_json_to_ftp(ftp_host, ftp_user, ftp_password, json_data, remote_filename):
+    # Convert the JSON data to a string
+    json_string = json.dumps(json_data)
+
+    # Use a BytesIO buffer to simulate a file
+    with io.BytesIO(json_string.encode('utf-8')) as file_buffer:
+        try:
+            # Connect to the FTP server
+            with ftplib.FTP(ftp_host) as ftp:
+                ftp.login(ftp_user, ftp_password)
+                # Store the file in the FTP server
+                ftp.storbinary(f'STOR {remote_filename}', file_buffer)
+            print(f'Successfully sent JSON data to {remote_filename} on FTP server.')
+        except ftplib.all_errors as e:
+            print(f'FTP error: {e}')
+
+def send_string_to_ftp(ftp_host, ftp_user, ftp_password, data_string, remote_filename):
+    # Use a BytesIO buffer to simulate a file
+    data_string = str(data_string)
+    with io.BytesIO(data_string.encode('utf-8')) as file_buffer:
+        try:
+            # Connect to the FTP server
+            with ftplib.FTP(ftp_host) as ftp:
+                ftp.login(ftp_user, ftp_password)
+                # Store the file in the FTP server
+                ftp.storbinary(f'STOR {remote_filename}', file_buffer)
+            print(f'Successfully sent data to {remote_filename} on FTP server.')
+        except ftplib.all_errors as e:
+            print(f'FTP error: {e}')
+
 
 def ensure_json_serializable(data):
     """
@@ -1132,7 +1170,7 @@ loopcounter=0
 position_queue = Queue()
 if os.name == 'nt':
     print('no gps on windows')
-    time.sleep(3)
+    time.sleep(0.1)
 else:
     message_types  = ['GPRMC', 'GPGGA', 'GPGSA', 'GPGSV']# ['GPRMC']  # Filter for GPRMC messages only  = ['GPRMC', 'GPGGA', 'GPGSA', 'GPGSV']
     gps_process = Process(target=start_gps_collector, args=(position_queue, message_types))
@@ -1187,6 +1225,9 @@ signal_strength, signal_quality=get_signal_quality(modem_port)
 message= "logger script " +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
 send_debug_message(message)
+
+send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"_"+str(int(time.time()))+"logger_startup.txt")
+
 try:
     if os.name == 'nt':
         print("Windows OS detected. Skipping serial port by path check.")
@@ -1202,6 +1243,9 @@ except IndexError:
 
 try:
     print("waiting for serial messages..")
+    ##################################
+    # START MAIN LOOP
+    ##################################
     while True:
         #temp_check()        
         #with open('data/serial_log.txt', 'a') as log_file:        
@@ -1514,6 +1558,7 @@ try:
                             #message_counter=send_json_message(mqtt_topic_odo, message, message_counter)
                             
                         elif port_path==core_port and len(telegram_hex) > 3:
+##NOVRAM------->########################################################################
                         #num_unprintable_hex < 1 and num_unprintable_raw < 1 and len(telegram_hex) > 10 and icn_count < 1: #if no header found, check if telegram is printable
                             novram_classified+=1
                             # CORE NOVRAM: Only process if all characters are printable (or whitespace)                        
@@ -1549,6 +1594,7 @@ try:
                                         message_counter_raw=send_json_message(mqtt_topic_odo, novram_message,message_counter_raw)
                                     else: 
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"/"+str(int(time.time()))+"NOVRAM.txt")
                                     last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
