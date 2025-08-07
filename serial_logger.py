@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.85"
+version="0.0.86"
 print(version)
 
 import hashlib
@@ -1244,7 +1244,7 @@ message= "logger script " +str(version)+" loop starting at "+str(time.strftime('
 send_text_message(mqtt_topic_debug,message)
 send_debug_message(message)
 
-send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/",str(UIC_VehicleID)+"_"+str(int(time.time()))+"logger_startup.txt")
+send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/",str(UIC_VehicleID)+"_"+str(int(time.time()))+"logger_startup.txt")
 
 try:
     if os.name == 'nt':
@@ -1418,7 +1418,7 @@ try:
                         print("try to send json message..")
                         message_counter=send_json_message(mqtt_topic_logger, message,message_counter)
                         if message_counter % 100 == 0:
-                            send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"default.txt")
+                            send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"default.txt")
                         last_basic_message=message.copy()  # Create a copy of the message for basic message
                     except Exception as e:
                         print(message)
