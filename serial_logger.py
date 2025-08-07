@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.86"
+version="0.0.87"
 print(version)
 
 import hashlib
@@ -1240,7 +1240,7 @@ data = b""
 online=True
 retry=0
 signal_strength, signal_quality=get_signal_quality(modem_port)
-message= "logger script " +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
+message= "logger script " +str(version)+" loop starting at "+str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))+" vehicleID: "+str(UIC_VehicleID)+" signal strength: "+str(signal_strength)+" signal quality: "+str(signal_quality)
 send_text_message(mqtt_topic_debug,message)
 send_debug_message(message)
 
@@ -1615,7 +1615,7 @@ try:
                                     else: 
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                     day=time.strftime('%Y-%m-%d', time.localtime())
-                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
                                     last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
