@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.88"
+version="0.0.89"
 print(version)
 
 import hashlib
@@ -335,7 +335,7 @@ def reboot_linux_after_delay(delay_minutes=15):
     t = threading.Thread(target=reboot, daemon=True)
     t.start()
 
-reboot_linux_after_delay(15)
+reboot_linux_after_delay(120)
 
 '''
 TO BE REMOVED
