@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.90"
+version="0.0.91"
 print(version)
 
 import hashlib
@@ -1602,16 +1602,16 @@ try:
                                     novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                           
                                     try:
-                                        novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))
+                                        novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))#source=default 
                                     except Exception as e:
                                         novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
                                         send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                     zero_count = telegram_utf.count('0')
                                     novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
-                                    novram_message=add_element(novram_message, "len", "length", str(len(telegram_utf)))
-                                    novram_message=add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                    novram_message = add_element(novram_message, "len", "length", str(len(telegram_utf)))
+                                    novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
                                     if zero_count > 10:
-                                        message_counter_raw=send_json_message(mqtt_topic_odo, novram_message,message_counter_raw)
+                                        message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
                                     else: 
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                     day=time.strftime('%Y-%m-%d', time.localtime())
