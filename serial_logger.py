@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.93"
+version="0.0.94"
 print(version)
 
 import hashlib
@@ -1216,11 +1216,68 @@ def parse_novram_objects(novram_object):
         print("Debug: Found O_CHANNEL2_SS1_AVAILABLE_ERROR in novram_object")
     novram_objects = novram_object.split('\n')
     novram_objects = [x.strip() for x in novram_objects if x.strip()]  # Remove empty lines and strip whitespace
-    novram_objects = [extract_error_message(x) for x in novram_objects if x.startswith('! <e>')]
+    # Split lines with the <e> tag into three elements: error_id, error_name, error_value
+    parsed_objects = []
+    for x in novram_objects:
+        if x.startswith('! <e>'):
+            # Remove tags and split by whitespace
+            line = x.replace('! <e>', '').replace('</e>', '').strip()
+            parts = line.split()
+            if len(parts) >= 5:
+                error_id = parts[0]
+                error_name = parts[1]
+                error_value = parts[2:]
+                parsed_objects.append((error_id, error_name, " ".join(error_value)))
+            else:
+                parsed_objects.append(line)
+        else:
+            parsed_objects.append(x)
+    novram_objects = parsed_objects
     
     #print(info)
     return novram_objects
-   
+
+test_novram_object = '''
+    extract single error messages from a cluster of novram messages and retreive info from the error_list
+    ! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961</e>
+    ! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968</e>
+    ! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317</e>
+    0
+    '''
+tst_output=parse_novram_objects(test_novram_object)  
+expected_output = [
+    'extract single error messages from a cluster of novram messages and retreive info from the error_list',
+    '1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961',
+    '1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968',
+    '1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975',
+    'SENSOR IN REVALIDATION',
+    '2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300',
+    'SENSOR IN REVALIDATION',
+    '2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309',
+    'SENSOR IN REVALIDATION',
+    '2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317',
+    '0'
+]
+
+if tst_output == expected_output:
+    print("novram parsing test successful")
+else:
+    print("tst_output does NOT match expected_output")
+    print("Difference:")
+    for i, (a, b) in enumerate(zip(tst_output, expected_output)):
+        if a != b:
+            print(f"Index {i}: tst_output='{a}' expected_output='{b}'")
+    if len(tst_output) != len(expected_output):
+        print(f"Length mismatch: tst_output={len(tst_output)}, expected_output={len(expected_output)}")
+    raise Exception("Fehler in parse_novram_objects test")
+
+
 #logpath=os.getcwd()+"/data/serial_log.txt"
 logpath=data_path+"serial_log_test.txt"
 loopcounter=0
@@ -1641,7 +1698,7 @@ try:
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
                                     novram_objects=parse_novram_objects(telegram_utf)
                                     for novram_element in novram_objects:
-                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
+                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element, gps_data,source="NOVRAM")
                                             
                                         try:
                                             novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element)#source=default 
