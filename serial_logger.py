@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.96"
+version="0.0.97"
 print(version)
 
 import hashlib
@@ -1699,25 +1699,34 @@ try:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
                                     novram_objects=parse_novram_objects(telegram_utf)
+                                    
                                     for novram_element in novram_objects:
-                                        empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element), gps_data,source="NOVRAM")
-                                            
                                         try:
-                                            empty_novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", str(novram_element))#source=default 
-                                        except Exception as e:
-                                            empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element),gps_data,source="NOVRAM")
-                                            send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element), gps_data,source="NOVRAM")
+                                                
+                                            try:
+                                                empty_novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", str(novram_element))#source=default 
+                                            except Exception as e:
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                                empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element),gps_data,source="NOVRAM")
+                                                
 
-                                        novram_message = add_element(empty_novram_message, "len", "length", str(len(novram_element)))
-                                        novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                        zero_count = str(novram_element).count('0')
-                                        if zero_count > 10:
-                                            message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
-                                        else: 
-                                            message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                        day=time.strftime('%Y-%m-%d', time.localtime())
-                                        
-                                        last_novram_message_time = time.time()#basic message without serial
+                                            novram_message = add_element(empty_novram_message, "len", "length", str(len(novram_element)))
+                                            novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                            zero_count = str(novram_element).count('0')
+                                            if zero_count > 10:
+                                                message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
+                                            else: 
+                                                message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                            day=time.strftime('%Y-%m-%d', time.localtime())
+                                            
+                                            last_novram_message_time = time.time()#basic message without serial
+                                        except Exception as e:
+                                            print(e)
+                                            send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            send_text_message(mqtt_topic_debug, "utf_telegram: "+str(telegram_utf))
+                                            
+
                                     send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
                                     skipped_message = 0
                                 else:
