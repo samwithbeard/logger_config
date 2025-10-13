@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.91"
+version="0.0.92"
 print(version)
 
 import hashlib
@@ -1179,6 +1179,47 @@ def add_odo_frame(json_data, parsed_frame):
     for key, value in parsed_frame.items():
         json_data = add_element(json_data, key, key.replace('_', ' ').title(), value)
     return json_data
+
+def extract_error_message(line):
+    # Remove the starting "!" and ending "</e>"
+    line = line.strip("! </e>")
+    
+    # Split the line by whitespace
+    parts = line.split()
+    try:
+        if len(parts) < 2:
+            return "Malformed error message."
+            error_name = "Error name not found."
+        else:
+        # Retrieve the error name (which is the second part)
+            error_name = parts[1]
+    except IndexError:
+        return "Malformed error message."        
+    
+    return error_name
+
+def parse_novram_objects(novram_object):
+    '''
+    extract single error messages from a cluster of novram messages and retreive info from the error_list
+    ! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961</e>
+    ! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968</e>
+    ! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317</e>
+    0
+    '''
+    if 'O_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   11963886' in novram_object:
+        print("Debug: Found O_CHANNEL2_SS1_AVAILABLE_ERROR in novram_object")
+    novram_objects = novram_object.split('\n')
+    novram_objects = [x.strip() for x in novram_objects if x.strip()]  # Remove empty lines and strip whitespace
+    novram_objects = [extract_error_message(x) for x in novram_objects if x.startswith('! <e>')]
+    
+    #print(info)
+    return novram_objects
    
 #logpath=os.getcwd()+"/data/serial_log.txt"
 logpath=data_path+"serial_log_test.txt"
@@ -1457,7 +1498,7 @@ try:
 
                         telegrams.append(data)
 
-                    if os.name == 'nt':
+                    if os.name == 'nt':#generate test data on windows
                         print("Windows OS detecte simulate serial data")
                         port_path = core_port
                         ser_id='0'
@@ -1598,25 +1639,25 @@ try:
                                     with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
-                                    
-                                    novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                          
-                                    try:
-                                        novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))#source=default 
-                                    except Exception as e:
-                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                        send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                    zero_count = telegram_utf.count('0')
-                                    novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
-                                    novram_message = add_element(novram_message, "len", "length", str(len(telegram_utf)))
-                                    novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                    if zero_count > 10:
-                                        message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
-                                    else: 
-                                        message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                    day=time.strftime('%Y-%m-%d', time.localtime())
-                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
-                                    last_novram_message_time = time.time()#basic message without serial
+                                    novram_objects=parse_novram_objects(telegram_utf)
+                                    for novram_element in novram_objects:
+                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
+                                            
+                                        try:
+                                            novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element+str(skipped_message))#source=default 
+                                        except Exception as e:
+                                            novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
+                                            send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+
+                                        novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                        novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                        if zero_count > 10:
+                                            message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
+                                        else: 
+                                            message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                        day=time.strftime('%Y-%m-%d', time.localtime())
+                                        send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                        last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
                                     skipped_message +=1
