@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.92"
+version="0.0.93"
 print(version)
 
 import hashlib
@@ -1644,7 +1644,7 @@ try:
                                         novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
                                             
                                         try:
-                                            novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element+str(skipped_message))#source=default 
+                                            novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element)#source=default 
                                         except Exception as e:
                                             novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
