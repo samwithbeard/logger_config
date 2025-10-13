@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.95"
+version="0.0.96"
 print(version)
 
 import hashlib
@@ -1214,9 +1214,11 @@ def parse_novram_objects(novram_object):
     '''
     if 'O_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   11963886' in novram_object:
         print("Debug: Found O_CHANNEL2_SS1_AVAILABLE_ERROR in novram_object")
+    novram_object= novram_object.replace('! <e>', '\n! <e>')
     novram_objects = novram_object.split('\n')
     novram_objects = [x.strip() for x in novram_objects if x.strip()]  # Remove empty lines and strip whitespace
     # Split lines with the <e> tag into three elements: error_id, error_name, error_value
+   
     parsed_objects = []
     for x in novram_objects:
         if x.startswith('! <e>'):
@@ -1698,16 +1700,17 @@ try:
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
                                     novram_objects=parse_novram_objects(telegram_utf)
                                     for novram_element in novram_objects:
-                                        empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element, gps_data,source="NOVRAM")
+                                        empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element), gps_data,source="NOVRAM")
                                             
                                         try:
-                                            empty_novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element)#source=default 
+                                            empty_novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", str(novram_element))#source=default 
                                         except Exception as e:
-                                            empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element,gps_data,source="NOVRAM")
+                                            empty_novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,str(novram_element),gps_data,source="NOVRAM")
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
 
                                         novram_message = add_element(empty_novram_message, "len", "length", str(len(novram_element)))
                                         novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                        zero_count = str(novram_element).count('0')
                                         if zero_count > 10:
                                             message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
                                         else: 
