@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.102"
+version="0.0.103"
 print(version)
 
 import hashlib
@@ -1632,6 +1632,7 @@ try:
                                     
                                 except:
                                     telegram_utf=str(telegram_raw)
+								send_text_message(mqtt_topic_debug, "whole utf telegram: "+str(telegram_utf))
                                     
                                 novram_message = str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
                                 novram_message = novram_message.rstrip('\n')
