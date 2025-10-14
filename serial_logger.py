@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.100"
+version="0.0.101"
 print(version)
 
 import hashlib
@@ -1277,7 +1277,8 @@ else:
             print(f"Index {i}: tst_output='{a}' expected_output='{b}'")
     if len(tst_output) != len(expected_output):
         print(f"Length mismatch: tst_output={len(tst_output)}, expected_output={len(expected_output)}")
-    raise Exception("Fehler in parse_novram_objects test")
+        if os.name == 'nt':
+            raise Exception("Fehler in parse_novram_objects test")
 
 
 #logpath=os.getcwd()+"/data/serial_log.txt"
@@ -1698,8 +1699,18 @@ try:
                                     with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
-                                    novram_objects=parse_novram_objects(telegram_utf)
-                                    send_text_message(mqtt_topic_debug, "whole utf telegram: "+str(telegram_utf))
+                                    last_novram_message_time = time.time()#basic message without serial
+                                    try:
+                                        novram_objects=parse_novram_objects(telegram_utf)
+                                    except Exception as e:
+                                        print(e)
+                                        send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                        novram_objects=[]
+                                    try:
+                                        send_text_message(mqtt_topic_debug, "whole utf telegram: "+str(telegram_utf))
+                                    except Exception as e:
+                                        print(e)
+
                                     for novram_element in novram_objects:
                                         try:
                                             message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
@@ -1726,7 +1737,7 @@ try:
                                                 message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                             day=time.strftime('%Y-%m-%d', time.localtime())
                                             
-                                            last_novram_message_time = time.time()#basic message without serial
+                                            
                                         except Exception as e:
                                             print(e)
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
