@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.99"
+version="0.0.100"
 print(version)
 
 import hashlib
@@ -806,11 +806,11 @@ def send_json_message(topic, json_message_i,message_counter):
     try:    
         json_message=""
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-        if os.name == 'nt':             
-            print("Windows OS detected. simulate data")
-            real_data=json_message_i
-            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
-            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
+        #if os.name == 'nt':             
+        #    print("Windows OS detected. simulate data")
+        #    real_data=json_message_i
+        #    json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
+        #    json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
 
         #json_message=replace_none_with_null(json_message_i)
         json_message=json_message_i
@@ -1706,9 +1706,11 @@ try:
                                             #print("create json message"+str(message))
                                             message=add_element(message, "lgr_lat", "Latitude", Latitude)
                                             message=add_element(message, "lgr_lon", "Longitude", Longitude)
+                                            #print("create json message"+str(message))
                                             empty_novram_message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)          
                                             try:
                                                 empty_novram_message=add_element(empty_novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))#source=default 
+                                                #print("create json message"+str(empty_novram_message))
                                             except Exception as e:
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                                 
@@ -1716,6 +1718,7 @@ try:
 
                                             novram_message = add_element(empty_novram_message, "len", "length", str(len(novram_element)))
                                             novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                            #print("create json message"+str(novram_message))
                                             zero_count = str(novram_element).count('0')
                                             if zero_count > 10:
                                                 message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
