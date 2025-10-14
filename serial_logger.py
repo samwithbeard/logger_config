@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.101"
+version="0.0.102"
 print(version)
 
 import hashlib
@@ -806,11 +806,11 @@ def send_json_message(topic, json_message_i,message_counter):
     try:    
         json_message=""
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-        #if os.name == 'nt':             
-        #    print("Windows OS detected. simulate data")
-        #    real_data=json_message_i
-        #    json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
-        #    json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
+        if os.name == 'nt':             
+            print("Windows OS detected. simulate data")
+            real_data=json_message_i
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
+            json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
 
         #json_message=replace_none_with_null(json_message_i)
         json_message=json_message_i
@@ -1214,73 +1214,13 @@ def parse_novram_objects(novram_object):
     '''
     if 'O_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   11963886' in novram_object:
         print("Debug: Found O_CHANNEL2_SS1_AVAILABLE_ERROR in novram_object")
-    novram_object= novram_object.replace('! <e>', '\n! <e>')
     novram_objects = novram_object.split('\n')
     novram_objects = [x.strip() for x in novram_objects if x.strip()]  # Remove empty lines and strip whitespace
-    # Split lines with the <e> tag into three elements: error_id, error_name, error_value
-   
-    parsed_objects = []
-    for x in novram_objects:
-        if x.startswith('! <e>'):
-            # Remove tags and split by whitespace
-            line = x.replace('! <e>', '').replace('</e>', '').strip()
-            parts = line.split()
-            if len(parts) >= 5:
-                error_id = parts[0]
-                error_name = parts[1]
-                error_value = parts[2:]
-                parsed_objects.append((error_id, error_name, " ".join(error_value)))
-            else:
-                parsed_objects.append(line)
-        else:
-            parsed_objects.append(x)
-    novram_objects = parsed_objects
+    novram_objects = [extract_error_message(x) for x in novram_objects if x.startswith('! <e>')]
     
     #print(info)
     return novram_objects
-
-test_novram_object = '''
-    extract single error messages from a cluster of novram messages and retreive info from the error_list
-    ! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961</e>
-    ! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968</e>
-    ! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975</e>
-    SENSOR IN REVALIDATION
-    ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300</e>
-    SENSOR IN REVALIDATION
-    ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309</e>
-    SENSOR IN REVALIDATION
-    ! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317</e>
-    0
-    '''
-tst_output=parse_novram_objects(test_novram_object)  
-expected_output = [
-    'extract single error messages from a cluster of novram messages and retreive info from the error_list',
-    '1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961',
-    '1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968',
-    '1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975',
-    'SENSOR IN REVALIDATION',
-    '2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300',
-    'SENSOR IN REVALIDATION',
-    '2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309',
-    'SENSOR IN REVALIDATION',
-    '2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317',
-    '0'
-]
-
-if tst_output == expected_output:
-    print("novram parsing test successful")
-else:
-    print("tst_output does NOT match expected_output")
-    print("Difference:")
-    for i, (a, b) in enumerate(zip(tst_output, expected_output)):
-        if a != b:
-            print(f"Index {i}: tst_output='{a}' expected_output='{b}'")
-    if len(tst_output) != len(expected_output):
-        print(f"Length mismatch: tst_output={len(tst_output)}, expected_output={len(expected_output)}")
-        if os.name == 'nt':
-            raise Exception("Fehler in parse_novram_objects test")
-
-
+   
 #logpath=os.getcwd()+"/data/serial_log.txt"
 logpath=data_path+"serial_log_test.txt"
 loopcounter=0
@@ -1699,52 +1639,25 @@ try:
                                     with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
-                                    last_novram_message_time = time.time()#basic message without serial
-                                    try:
-                                        novram_objects=parse_novram_objects(telegram_utf)
-                                    except Exception as e:
-                                        print(e)
-                                        send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                        novram_objects=[]
-                                    try:
-                                        send_text_message(mqtt_topic_debug, "whole utf telegram: "+str(telegram_utf))
-                                    except Exception as e:
-                                        print(e)
-
+                                    novram_objects=parse_novram_objects(telegram_utf)
                                     for novram_element in novram_objects:
+                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
+                                            
                                         try:
-                                            message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
-                                            #print("create json message"+str(message))
-                                            message=add_element(message, "lgr_lat", "Latitude", Latitude)
-                                            message=add_element(message, "lgr_lon", "Longitude", Longitude)
-                                            #print("create json message"+str(message))
-                                            empty_novram_message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)          
-                                            try:
-                                                empty_novram_message=add_element(empty_novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))#source=default 
-                                                #print("create json message"+str(empty_novram_message))
-                                            except Exception as e:
-                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                                
-                                                
-
-                                            novram_message = add_element(empty_novram_message, "len", "length", str(len(novram_element)))
-                                            novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                            #print("create json message"+str(novram_message))
-                                            zero_count = str(novram_element).count('0')
-                                            if zero_count > 10:
-                                                message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
-                                            else: 
-                                                message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                            day=time.strftime('%Y-%m-%d', time.localtime())
-                                            
-                                            
+                                            novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", novram_element)#source=default 
                                         except Exception as e:
-                                            print(e)
+                                            novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,novram_element+str(skipped_message),gps_data,source="NOVRAM")
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                            send_text_message(mqtt_topic_debug, "utf_telegram: "+str(telegram_utf))
-                                            
 
-                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                        novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                        novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                        if zero_count > 10:
+                                            message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
+                                        else: 
+                                            message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                        day=time.strftime('%Y-%m-%d', time.localtime())
+                                        send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                        last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
                                     skipped_message +=1
