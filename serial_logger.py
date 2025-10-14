@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.105"
+version="0.0.106"
 print(version)
 
 import hashlib
@@ -1633,11 +1633,11 @@ try:
                                 except:
                                     telegram_utf=str(telegram_raw)
 
-								try:
-									truncated_telegram_utf = str(telegram_utf)[:1000] + ("...[truncated]" if len(str(telegram_utf)) > 1000 else "")
-	+                               send_text_message(mqtt_topic_debug, "whole utf telegram: "+truncated_telegram_utf)
-								except:
-									print("cannot truncate")
+								#try:
+									#truncated_telegram_utf = str(telegram_utf)[:1000] + ("...[truncated]" if len(str(telegram_utf)) > 1000 else "")
+	+                               #send_text_message(mqtt_topic_debug, "whole utf telegram: "+truncated_telegram_utf)
+								#except:
+									#print("cannot truncate")
                                     
                                 novram_message = str(my_uuid)+"\t"+timestamp+"\t"+str(now)+"\t"+str(telegram_utf)+"\t"+str(telegram_hex)
                                 novram_message = novram_message.rstrip('\n')
