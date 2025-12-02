@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.108"
+version="0.0.109"
 print(version)
 
 import hashlib
@@ -28,10 +28,11 @@ from enum import Enum
 import threading
 import ftplib
 import io
-
+import copy
 
 if os.name == 'posix':  # Check if the operating system is Linux
     from gpiozero import LED
+
 
 else:    
     print("gpiozero is not supported on Windows. Skipping GPIO setup.")
@@ -380,8 +381,6 @@ mqtt_client_id_fahrzeug = UIC_VehicleID+"-ETCS-inte" #<uic>-ETCS-inte
 mqtt_topic_test_publish=mqtt_topic_publish+"/test"
 mqtt_client_id_intern = "s-ETCS-consumer-inte-"+str(my_uuid) #s-ETCS-consumer-inte-<uuid>
 mqtt_user_id="ETCS_PoC-inte"
-
-
 
 mqtt_pem_file_intern = os.path.join(config_path, "SBB-CL-B-Issuing-CA.pem")
 mqtt_pem_file_intern = os.path.normpath(mqtt_pem_file_intern)
@@ -806,12 +805,15 @@ def send_json_message(topic, json_message_i,message_counter):
     try:    
         json_message=""
         json_message_i = add_element(json_message_i, "seq", "Sequence Number", message_counter)
-        if os.name == 'nt':             
+        
+        if os.name == 'nt':     
+            print("Windows OS detected.send json message-----------------------------")
+        '''        
             print("Windows OS detected. simulate data")
             real_data=json_message_i
             json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T12:28:39.103890Z', 'sendVehicle': '94856500668'}, 'opdata': [{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification':'0.0.75', 'time': '2025-08-04T12:28:39.103890Z', 'operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp','name': 'Logger CPU Temperature', 'value': 64.8}, {'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0},{'key': 'lgr_gps', 'name': 'position', 'value': '$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source','value': 'default'}, {'key': 'lgr_lat', 'name': 'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude','value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name':'Signal Strength', 'value': 16}, {'key': 'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key':'lgr_cpu_load', 'name': 'CPU Load', 'value': 0.62255859375}, {'key': 'lgr_memory_load', 'name': 'Memory Load','value': 7.0}, {'key': 'lgr_disk_space', 'name': 'Disk Space', 'value': 28.7}, {'key': 'seq', 'name': 'SequenceNumber', 'value': 27}]}]}
             json_message_i= {'header': {'fleet': 'ICN', 'genTime': '2025-08-04T14:00:17.446717Z', 'sendVehicle': '94856500668'}, 'opdata':[{'vehicleUIC': '94856500668', 'vehicleType': 'ICN', 'specification': '0.0.77', 'time': '2025-08-04T14:00:17.446717Z','operationalStatus': 'operational', 'data': [{'key': 'lgr_cpu_temp', 'name': 'Logger CPU Temperature', 'value': None},{'key': 'lgr_max_speed', 'name': 'Maximum Speed', 'value': 0}, {'key': 'lgr_gps', 'name': 'position', 'value':'$GPRMC,,V,,,,,,,,,,N*53'}, {'key': 'source', 'name': 'source', 'value': 'default'}, {'key': 'lgr_lat', 'name':'Latitude', 'value': 0}, {'key': 'lgr_lon', 'name': 'Longitude', 'value': 0}, {'key': 'lgr_gps_speed', 'name': 'GPS Speed', 'value': 0.0}, {'key': 'lgr_signal_strength', 'name': 'Signal Strength', 'value': 25}, {'key':'lgr_signal_quality', 'name': 'Signal Quality', 'value': 99}, {'key': 'lgr_cpu_load', 'name': 'CPU Load', 'value':1.45263671875}, {'key': 'lgr_memory_load', 'name': 'Memory Load', 'value': 6.4}, {'key': 'lgr_disk_space', 'name':'Disk Space', 'value': 29.1}, {'key': 'seq', 'name': 'Sequence Number', 'value': 0}]}]}
-
+        '''
         #json_message=replace_none_with_null(json_message_i)
         json_message=json_message_i
       
@@ -992,6 +994,7 @@ def find_serial_adapters(target_description, directory = '/dev/serial/by-id/'):
         for port in ports:
             sers.append(serial.Serial(port, 115200, timeout=1))
     return sers
+
 sers=[]
 sers2=[]
 fail=True
@@ -1164,6 +1167,28 @@ def create_raw_JSON_object(timestamp,UIC_VehicleID,raw_data,position="",source="
     return json_data
 
 def add_element(json_data, key, name, value):
+    # Work on a copy to avoid mutating the caller's object
+    try:
+        json_data = copy.deepcopy(json_data)
+    except Exception:
+        # Fallback to JSON round-trip if deepcopy fails
+        try:
+            json_data = json.loads(json.dumps(json_data))
+        except Exception as e:
+            raise ValueError(f"Unable to copy json_data: {e}")
+
+    # Ensure the expected structure exists: opdata -> list -> [0] -> data -> list
+    if not isinstance(json_data, dict):
+        raise ValueError("json_data must be a dict")
+
+    if 'opdata' not in json_data or not isinstance(json_data['opdata'], list) or len(json_data['opdata']) == 0:
+        json_data.setdefault('opdata', [{}])
+
+    if not isinstance(json_data['opdata'][0], dict):
+        json_data['opdata'][0] = {}
+
+    if 'data' not in json_data['opdata'][0] or not isinstance(json_data['opdata'][0]['data'], list):
+        json_data['opdata'][0]['data'] = []
     # Create the new data element
     new_element = {
         "key": key,
@@ -1179,6 +1204,79 @@ def add_odo_frame(json_data, parsed_frame):
     for key, value in parsed_frame.items():
         json_data = add_element(json_data, key, key.replace('_', ' ').title(), value)
     return json_data
+
+def extract_error_message(line):
+    # Remove the starting "!" and ending "</e>"
+    line = line.strip("! </e>")
+    
+    # Split the line by whitespace
+    parts = line.split()
+    try:
+        if len(parts) < 2:
+            return "Malformed error message."
+            error_name = "Error name not found."
+        else:
+        # Retrieve the error name (which is the second part)
+            error_name = parts[1]
+    except IndexError:
+        return "Malformed error message."        
+    
+    return error_name
+
+def parse_novram_objects(novram_object):
+    '''
+     "! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   54633227</e>\r\n! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   54633234</e>\r\n! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   54633241</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   54633567</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   54633576</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   54633585</e>\r\n0"
+
+    '''
+    '''
+    extract single error messages from a cluster of novram messages and retreive info from the error_list
+    ! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   85675961</e>
+    ! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   85675968</e>
+    ! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   85675975</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   85676300</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   85676309</e>
+    SENSOR IN REVALIDATION
+    ! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   85676317</e>
+    0
+    '''
+    if 'O_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   11963886' in novram_object:
+        print("Debug: Found O_CHANNEL2_SS1_AVAILABLE_ERROR in novram_object") 
+    #novram_object="! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   54633227</e>\r\n! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   54633234</e>\r\n! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   54633241</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   54633567</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   54633576</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   54633585</e>\r\n0"
+    
+    novram_objects = novram_object.split('\n')
+    # normalize lines and remove empty ones
+    novram_objects = [ln.strip() for ln in novram_objects if ln.strip()]
+
+    processed = []
+    for line in novram_objects:
+        # if the line contains opening or closing <e> tags (with optional leading '!'), strip those tags
+        if re.search(r'!\s*<\s*e\s*>', line, flags=re.IGNORECASE) or re.search(r'<\s*e\s*>', line, flags=re.IGNORECASE) or re.search(r'</\s*e\s*>', line, flags=re.IGNORECASE):
+            cleaned = re.sub(r'!\s*', '', line, flags=re.IGNORECASE)                # remove leading '!' if present
+            cleaned = re.sub(r'<\s*e\s*>', '', cleaned, flags=re.IGNORECASE)       # remove opening tag
+            cleaned = re.sub(r'</\s*e\s*>', '', cleaned, flags=re.IGNORECASE)      # remove closing tag
+            cleaned = cleaned.strip()
+            if cleaned:
+                processed.append(cleaned)
+        else:
+            # keep line as-is when no tags are present
+            processed.append(line)
+
+    novram_objects = processed
+    """ novram_objects = [x.strip() for x in novram_objects if x.strip()]  # Remove empty lines and strip whitespace
+    # Extract messages between "! <e>" and "</e>" (support multiple occurrences)
+    matches = re.findall(r'!\s*<e>\s*(.*?)\s*</e>', novram_object, flags=re.IGNORECASE | re.DOTALL)
+    if matches:
+        novram_objects = [m.strip() for m in matches]
+    else:
+        # Fallback: keep lines that start with '! <e>' and strip the tags
+        novram_objects = [re.sub(r'^\s*!\s*<e>\s*|\s*</e>\s*$', '', x).strip()
+                          for x in novram_objects if x.lstrip().startswith('! <e>')] 
+                          """
+    
+    #print(info)
+    return novram_objects
    
 #logpath=os.getcwd()+"/data/serial_log.txt"
 logpath=data_path+"serial_log_test.txt"
@@ -1457,13 +1555,15 @@ try:
 
                         telegrams.append(data)
 
-                    if os.name == 'nt':
+                    if os.name == 'nt':#generate test data on windows
                         print("Windows OS detecte simulate serial data")
                         port_path = core_port
                         ser_id='0'
                         telegram_hex_odo='1b02445d09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005d1a111b031b02445e09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005e1a131b031b02445f09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005f1a151b031b02446009b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000601a171b031b02446109b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000611a191b031b02446209b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000621a1b011b031b02446309b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000631a1d1b031b02446409b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000641a1f1b031b02446509b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000651a211b031b02446609b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000661a231b031b02446709b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000671a251b031b02446809b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000681a271b031b02446909b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000691a291b031b02446a09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006a1a2b1b031b02446b09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006b1a2d1b031b02446c09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006c1a2f1b031b02446d09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006d1a311b031b02446e09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006e1a331b031b02446f09b500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006f1a351b031b02447009b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000701a371b031b02447109b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000711a391b031b02447209b50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000721a3b1b031b02447309b5000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
                         telegram_raw_odo=bytes.fromhex(telegram_hex_odo)
-                        telegram_raw_novram=b'SENSOR IN REVALIDATION ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   22489643</e> SENSOR IN REVALIDATION ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   22489652</e> SENSOR IN REVALIDATION! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   22489661</e> 0'
+                        telegram_raw_novram=b'! <e>  1485 ODO_CHANNEL0_SS1_NOT_AVAILABLE_ERROR TRUE   54633227</e>\r\n! <e>  1501 ODO_CHANNEL1_SS1_NOT_AVAILABLE_ERROR TRUE   54633234</e>\r\n! <e>  1517 ODO_CHANNEL2_SS1_NOT_AVAILABLE_ERROR TRUE   54633241</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   54633567</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   54633576</e>\r\nSENSOR IN REVALIDATION\r\n! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   54633585</e>\r\n'
+    
+                        #telegram_raw_novram=b'SENSOR IN REVALIDATION ! <e>  2344 ODO_CHANNEL0_SS1_AVAILABLE_ERROR TRUE   22489643</e> SENSOR IN REVALIDATION ! <e>  2345 ODO_CHANNEL1_SS1_AVAILABLE_ERROR TRUE   22489652</e> SENSOR IN REVALIDATION! <e>  2346 ODO_CHANNEL2_SS1_AVAILABLE_ERROR TRUE   22489661</e> 0'
                         telegrams.append(telegram_raw_novram)
                         
                     #print("data "+str(data))
@@ -1598,25 +1698,29 @@ try:
                                     with open( os.path.join(data_path, 'output.txt'), 'a') as file:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
-                                    
-                                    novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                          
+                                    novram_objects=parse_novram_objects(telegram_utf)
+                                    # create a safe template copy of last_basic_message to use when building NOVRAM messages
                                     try:
-                                        novram_message=add_element(last_basic_message, "NOVRAM", "NOVRAM Data", telegram_utf+str(skipped_message))#source=default 
-                                    except Exception as e:
-                                        novram_message=create_raw_JSON_object(timestamp_fzdia,UIC_VehicleID,telegram_utf+str(skipped_message),gps_data,source="NOVRAM")
-                                        send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                    zero_count = telegram_utf.count('0')
-                                    novram_message = add_element(novram_message, "zero_count", "Zero Count", str(zero_count))
-                                    novram_message = add_element(novram_message, "len", "length", str(len(telegram_utf)))
-                                    novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                    if zero_count > 10:
-                                        message_counter=send_json_message(mqtt_topic_odo, novram_message,message_counter)
-                                    else: 
+                                        if isinstance(last_basic_message, dict):
+                                            novram_template = json.loads(json.dumps(last_basic_message))  # deep-copy via JSON
+                                        else:
+                                            novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data)
+                                    except Exception:                                        
+                                        novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data)
+
+                                    for novram_element in novram_objects:
+                                        
+                                        try:                                            
+                                            novram_message=add_element(novram_template, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
+                                        except Exception as e:                                           
+                                            send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+
+                                        novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                        novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                    day=time.strftime('%Y-%m-%d', time.localtime())
-                                    send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
-                                    last_novram_message_time = time.time()#basic message without serial
+                                        day=time.strftime('%Y-%m-%d', time.localtime())
+                                        send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                        last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
                                     skipped_message +=1
