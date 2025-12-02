@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.110"
+version="0.0.111"
 print(version)
 
 import hashlib
@@ -1178,17 +1178,17 @@ def add_element(json_data, key, name, value):
             raise ValueError(f"Unable to copy json_data: {e}")
 
     # Ensure the expected structure exists: opdata -> list -> [0] -> data -> list
-    if not isinstance(json_data, dict):
-        raise ValueError("json_data must be a dict")
+    #if not isinstance(json_data, dict):
+    #    raise ValueError("json_data must be a dict")
 
-    if 'opdata' not in json_data or not isinstance(json_data['opdata'], list) or len(json_data['opdata']) == 0:
-        json_data.setdefault('opdata', [{}])
+    #if 'opdata' not in json_data or not isinstance(json_data['opdata'], list) or len(json_data['opdata']) == 0:
+    #   json_data.setdefault('opdata', [{}])
 
-    if not isinstance(json_data['opdata'][0], dict):
-        json_data['opdata'][0] = {}
+    #if not isinstance(json_data['opdata'][0], dict):
+    #    json_data['opdata'][0] = {}
 
-    if 'data' not in json_data['opdata'][0] or not isinstance(json_data['opdata'][0]['data'], list):
-        json_data['opdata'][0]['data'] = []
+    #if 'data' not in json_data['opdata'][0] or not isinstance(json_data['opdata'][0]['data'], list):
+    #    json_data['opdata'][0]['data'] = []
     # Create the new data element
     new_element = {
         "key": key,
