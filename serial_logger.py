@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.109"
+version="0.0.110"
 print(version)
 
 import hashlib
@@ -1464,9 +1464,18 @@ try:
                 
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
                 #print("create json message"+str(message))
-                message=add_element(message, "lgr_lat", "Latitude", Latitude)
-                message=add_element(message, "lgr_lon", "Longitude", Longitude)
-                message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)       
+                try:
+                    message=add_element(message, "lgr_lat", "Latitude", Latitude)
+                except Exception as e:
+                    message=add_element(message, "lgr_lat", "Latitude", "null")
+                try:
+                    message=add_element(message, "lgr_lon", "Longitude", Longitude)
+                except Exception as e:
+                    message=add_element(message, "lgr_lon", "Longitude", "null")
+                try:
+                    message=add_element(message, "lgr_gps_speed", "GPS Speed", gps_speed)   
+                except Exception as e:
+                    message=add_element(message, "lgr_gps_speed", "GPS Speed", "null")    
                 #print("add element to message"+str(message))           
                 v_diff=abs(float(gps_speed) - float(last_gps_speed)) if isinstance(gps_speed, (int, float)) and isinstance(last_gps_speed, (int, float)) else 0
                 #compile basicmessages 
