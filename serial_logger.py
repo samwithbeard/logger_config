@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.111"
+version="0.0.112"
 print(version)
 
 import hashlib
@@ -1718,9 +1718,19 @@ try:
                                         novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data)
 
                                     for novram_element in novram_objects:
+                                        # count occurrences of "ODO" (case-insensitive) in the novram element
+                                        try:
+                                            if "ODO" in str(novram_element).upper():
+                                                tag="ODO"
+                                            else:
+                                                tag="notag"     
+                                        except Exception:
+                                            tag = ""
+                                        
+                                        novram_message = add_element(novram_template, "tag", "tag",tag)
                                         
                                         try:                                            
-                                            novram_message=add_element(novram_template, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
+                                            novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
                                         except Exception as e:                                           
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
 
