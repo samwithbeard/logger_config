@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.115"
+version="0.0.116"
 print(version)
 
 import hashlib
@@ -1719,6 +1719,10 @@ try:
                                         novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data,source="NOVRAM")
 
                                     for novram_element in novram_objects:
+                                        try:                                            
+                                            novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", str(novram_element))                                            
+                                        except Exception as e:   
+                                            novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", "empty")   
                                        
                                         if len(str(novram_element).strip()) > 2:
                                             try:
@@ -1731,7 +1735,7 @@ try:
                                                         matched = pattern
                                                         break
                                                 if matched:
-                                                    tag="verbose" 
+                                                    tag="informational" 
                                                 else:
                                                     tag = "notag"
                                             
@@ -1741,18 +1745,20 @@ try:
                                                 if "_" in str(novram_element):
                                                     Error_ID = str(novram_element).split(" ")[0].strip()
                                                     relative_timestamp = str(novram_element).split(" ")[-1].strip()
-                                                    novram_element= str(novram_element).split(" ")[1]
+                                                    novram_name= str(novram_element).split(" ")[1]
                                                 else:
+                                                    novram_name= str(novram_element)
                                                     Error_ID = "0"
                                                     relative_timestamp = "0"
                                             except Exception:
+                                                novram_name="none"
                                                 Error_ID = "0"
                                                 relative_timestamp = "0"
                                             
                                             novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
                                             
                                             try:                                            
-                                                novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
+                                                novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_name))                                            
                                             except Exception as e:   
                                                 novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", "empty")                                           
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
