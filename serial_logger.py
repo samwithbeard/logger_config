@@ -1762,12 +1762,31 @@ try:
                                             except Exception as e:   
                                                 novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", "empty")                                           
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                            novram_message = add_element(novram_template, "err_id", "Error ID",tag)
-                                            novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
-                                            novram_message = add_element(novram_template, "tag", "tag",tag)
-                                            novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
-                                            novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                            message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+
+                                            try:    
+                                                novram_message = add_element(novram_template, "err_id", "Error ID",tag)
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            try:    
+                                                novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            try:    
+                                                novram_message = add_element(novram_template, "tag", "tag",tag)
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            try:        
+                                                novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            try:    
+                                                novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            try:    
+                                                message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                            except Exception as e:                                                                                            
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             tag = "notag"
                                             day=time.strftime('%Y-%m-%d', time.localtime())
                                             send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
