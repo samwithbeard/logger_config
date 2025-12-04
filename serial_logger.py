@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.112"
+version="0.0.113"
 print(version)
 
 import hashlib
@@ -1713,27 +1713,42 @@ try:
                                         if isinstance(last_basic_message, dict):
                                             novram_template = json.loads(json.dumps(last_basic_message))  # deep-copy via JSON
                                         else:
-                                            novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data)
+                                            novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data,source="NOVRAM")
                                     except Exception:                                        
-                                        novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data)
+                                        novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data,source="NOVRAM")
 
                                     for novram_element in novram_objects:
                                         # count occurrences of "ODO" (case-insensitive) in the novram element
                                         try:
-                                            if "ODO" in str(novram_element).upper():
-                                                tag="ODO"
+                                            # list of strings to match (case-insensitive)
+                                            novram_tags = ["SENSOR IN REVALIDATION","SS1_AVAILABLE_ERROR","SS1_NOT_AVAILABLE_ERROR"]  # extend this list as needed
+                                            text = str(novram_element).upper()
+                                            matched = None
+                                            for pattern in novram_tags:
+                                                if pattern.upper() in text:
+                                                    matched = pattern
+                                                    break
+                                            if matched:
+                                                tag="SPAM" 
                                             else:
-                                                tag="notag"     
+                                                tag = "notag"
+                                        
                                         except Exception:
                                             tag = ""
                                         
-                                        novram_message = add_element(novram_template, "tag", "tag",tag)
+                                        if "_" in str(novram_element):
+                                            Error_ID = str(novram_element).split(" ")[0].strip()
+                                            relative_timestamp = str(novram_element).split(" ")[-1].strip()
+                                        
+                                        novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
                                         
                                         try:                                            
                                             novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
                                         except Exception as e:                                           
                                             send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-
+                                        novram_message = add_element(novram_template, "err_id", "Error ID",tag)
+                                        novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
+                                        novram_message = add_element(novram_template, "tag", "tag",tag)
                                         novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
                                         novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
