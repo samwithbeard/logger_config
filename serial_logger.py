@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.113"
+version="0.0.114"
 print(version)
 
 import hashlib
@@ -1729,7 +1729,7 @@ try:
                                                     matched = pattern
                                                     break
                                             if matched:
-                                                tag="SPAM" 
+                                                tag="verbose" 
                                             else:
                                                 tag = "notag"
                                         
@@ -1739,6 +1739,9 @@ try:
                                         if "_" in str(novram_element):
                                             Error_ID = str(novram_element).split(" ")[0].strip()
                                             relative_timestamp = str(novram_element).split(" ")[-1].strip()
+                                        else:
+                                            Error_ID = "0"
+                                            relative_timestamp = "0"
                                         
                                         novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
                                         
@@ -1752,6 +1755,7 @@ try:
                                         novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
                                         novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
                                         message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                        tag = "notag"
                                         day=time.strftime('%Y-%m-%d', time.localtime())
                                         send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
                                         last_novram_message_time = time.time()#basic message without serial
