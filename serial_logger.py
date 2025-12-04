@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.114"
+version="0.0.115"
 print(version)
 
 import hashlib
@@ -1461,7 +1461,7 @@ try:
                         
 
                     
-                
+                message=""
                 message = create_JSON_object(timestamp_fzdia,UIC_VehicleID,cpu_temp,max_speed,gps_data)
                 #print("create json message"+str(message))
                 try:
@@ -1708,6 +1708,7 @@ try:
                                         file.write(novram_message)
                                 if time.time() - last_novram_message_time >= conf_min_time_novram:
                                     novram_objects=parse_novram_objects(telegram_utf)
+                                    
                                     # create a safe template copy of last_basic_message to use when building NOVRAM messages
                                     try:
                                         if isinstance(last_basic_message, dict):
@@ -1718,47 +1719,53 @@ try:
                                         novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data,source="NOVRAM")
 
                                     for novram_element in novram_objects:
-                                        # count occurrences of "ODO" (case-insensitive) in the novram element
-                                        try:
-                                            # list of strings to match (case-insensitive)
-                                            novram_tags = ["SENSOR IN REVALIDATION","SS1_AVAILABLE_ERROR","SS1_NOT_AVAILABLE_ERROR"]  # extend this list as needed
-                                            text = str(novram_element).upper()
-                                            matched = None
-                                            for pattern in novram_tags:
-                                                if pattern.upper() in text:
-                                                    matched = pattern
-                                                    break
-                                            if matched:
-                                                tag="verbose" 
-                                            else:
-                                                tag = "notag"
-                                        
-                                        except Exception:
-                                            tag = ""
-                                        
-                                        if "_" in str(novram_element):
-                                            Error_ID = str(novram_element).split(" ")[0].strip()
-                                            relative_timestamp = str(novram_element).split(" ")[-1].strip()
-                                        else:
-                                            Error_ID = "0"
-                                            relative_timestamp = "0"
-                                        
-                                        novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
-                                        
-                                        try:                                            
-                                            novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
-                                        except Exception as e:                                           
-                                            send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
-                                        novram_message = add_element(novram_template, "err_id", "Error ID",tag)
-                                        novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
-                                        novram_message = add_element(novram_template, "tag", "tag",tag)
-                                        novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
-                                        novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
-                                        message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
-                                        tag = "notag"
-                                        day=time.strftime('%Y-%m-%d', time.localtime())
-                                        send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
-                                        last_novram_message_time = time.time()#basic message without serial
+                                       
+                                        if len(str(novram_element).strip()) > 2:
+                                            try:
+                                                # list of strings to match (case-insensitive)
+                                                novram_tags = ["SENSOR IN REVALIDATION","SS1_AVAILABLE_ERROR","SS1_NOT_AVAILABLE_ERROR"]  # extend this list as needed
+                                                text = str(novram_element).upper()
+                                                matched = None
+                                                for pattern in novram_tags:
+                                                    if pattern.upper() in text:
+                                                        matched = pattern
+                                                        break
+                                                if matched:
+                                                    tag="verbose" 
+                                                else:
+                                                    tag = "notag"
+                                            
+                                            except Exception:
+                                                tag = ""
+                                            try:
+                                                if "_" in str(novram_element):
+                                                    Error_ID = str(novram_element).split(" ")[0].strip()
+                                                    relative_timestamp = str(novram_element).split(" ")[-1].strip()
+                                                    novram_element= str(novram_element).split(" ")[1]
+                                                else:
+                                                    Error_ID = "0"
+                                                    relative_timestamp = "0"
+                                            except Exception:
+                                                Error_ID = "0"
+                                                relative_timestamp = "0"
+                                            
+                                            novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
+                                            
+                                            try:                                            
+                                                novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_element))                                            
+                                            except Exception as e:   
+                                                novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", "empty")                                           
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            novram_message = add_element(novram_template, "err_id", "Error ID",tag)
+                                            novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
+                                            novram_message = add_element(novram_template, "tag", "tag",tag)
+                                            novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                            novram_message = add_element(novram_message, "serial_id", "Serial ID", str(ser_id))
+                                            message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
+                                            tag = "notag"
+                                            day=time.strftime('%Y-%m-%d', time.localtime())
+                                            send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
+                                            last_novram_message_time = time.time()#basic message without serial
                                     skipped_message = 0
                                 else:
                                     skipped_message +=1
