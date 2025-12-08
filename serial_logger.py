@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.118"
+version="0.0.119"
 print(version)
 
 import hashlib
@@ -1764,11 +1764,11 @@ try:
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
 
                                             try:    
-                                                novram_message = add_element(novram_message, "err_id", "Error ID",tag)
+                                                novram_message = add_element(novram_message, "err_id", "Error ID",Error_ID)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:    
-                                                novram_message = add_element(novram_message, "rel_time", "Relative Timestamp",tag)
+                                                novram_message = add_element(novram_message, "rel_time", "Relative Timestamp",relative_timestamp)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:    
