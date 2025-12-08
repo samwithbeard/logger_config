@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.117"
+version="0.0.118"
 print(version)
 
 import hashlib
@@ -1719,11 +1719,7 @@ try:
                                         novram_template = create_JSON_object(timestamp_fzdia, UIC_VehicleID, cpu_temp, max_speed, gps_data,source="NOVRAM")
 
                                     for novram_element in novram_objects:
-                                        #try:                                            
-                                        #    novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", str(novram_element))                                            
-                                        #except Exception as e:   
-                                        #    novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", "empty")   
-                                       
+                                        
                                         if len(str(novram_element).strip()) > 2:
                                             try:
                                                 # list of strings to match (case-insensitive)
@@ -1756,7 +1752,11 @@ try:
                                                 relative_timestamp = "0"
                                             
                                             novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
-                                            
+                                            #try:                                            
+                                            #    novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", str(novram_element))                                            
+                                            #except Exception as e:   
+                                            #    novram_message=add_element(novram_message, "NOVRAM1", "NOVRAM Raw Data", "empty")   
+                                        
                                             try:                                            
                                                 novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", str(novram_name))                                            
                                             except Exception as e:   
@@ -1764,15 +1764,15 @@ try:
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
 
                                             try:    
-                                                novram_message = add_element(novram_template, "err_id", "Error ID",tag)
+                                                novram_message = add_element(novram_message, "err_id", "Error ID",tag)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:    
-                                                novram_message = add_element(novram_template, "rel_time", "Relative Timestamp",tag)
+                                                novram_message = add_element(novram_message, "rel_time", "Relative Timestamp",tag)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:    
-                                                novram_message = add_element(novram_template, "tag", "tag",tag)
+                                                novram_message = add_element(novram_message, "tag", "tag",tag)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:        
