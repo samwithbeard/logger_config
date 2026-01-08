@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.120"
+version="0.0.121"
 print(version)
 
 import hashlib
@@ -1751,7 +1751,7 @@ try:
                                                     relative_timestamp = "0"
                                                     NOVRAM_cnt="Nan"
                                             except Exception:
-                                                novram_name='logger parsing error'
+                                                novram_name=str(novram_element)
                                                 Error_ID = "0"
                                                 relative_timestamp = "0"
                                                 NOVRAM_cnt="Nan"
