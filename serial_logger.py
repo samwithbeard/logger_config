@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.121"
+version="0.0.122"
 print(version)
 
 import hashlib
@@ -1737,9 +1737,15 @@ try:
                                             
                                             except Exception:
                                                 tag = ""
-                                            try:                                                
-                                                n_len=len(str(novram_element).split(" "))
-                                                Error_ID = int(str(novram_element).split(" ")[0].strip())
+                                            try:     
+                                                try:                                           
+                                                    n_len=len(str(novram_element).split(" "))
+                                                except Exception:
+                                                    n_len=0
+                                                try:
+                                                    Error_ID = int(str(novram_element).split(" ")[0].strip())
+                                                except Exception:
+                                                    Error_ID = -1
                                                 if "_" in str(novram_element) and n_len >=3 and Error_ID >0:
                                                     Error_ID = str(novram_element).split(" ")[0].strip()
                                                     relative_timestamp = str(novram_element).split(" ")[-1].strip()
