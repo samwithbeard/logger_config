@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-version="0.0.119"
+version="0.0.120"
 print(version)
 
 import hashlib
@@ -1737,19 +1737,24 @@ try:
                                             
                                             except Exception:
                                                 tag = ""
-                                            try:
-                                                if "_" in str(novram_element):
+                                            try:                                                
+                                                n_len=len(str(novram_element).split(" "))
+                                                Error_ID = int(str(novram_element).split(" ")[0].strip())
+                                                if "_" in str(novram_element) and n_len >=3 and Error_ID >0:
                                                     Error_ID = str(novram_element).split(" ")[0].strip()
                                                     relative_timestamp = str(novram_element).split(" ")[-1].strip()
                                                     novram_name= str(novram_element).split(" ")[1]
+                                                    NOVRAM_cnt=len(str(novram_element).split(" "))
                                                 else:
                                                     novram_name= str(novram_element)
                                                     Error_ID = "0"
                                                     relative_timestamp = "0"
+                                                    NOVRAM_cnt="Nan"
                                             except Exception:
-                                                novram_name="none"
+                                                novram_name='logger parsing error'
                                                 Error_ID = "0"
                                                 relative_timestamp = "0"
+                                                NOVRAM_cnt="Nan"
                                             
                                             novram_message = add_element(novram_template, "seq", "Sequence Number",str(message_counter))
                                             #try:                                            
@@ -1762,6 +1767,7 @@ try:
                                             except Exception as e:   
                                                 novram_message=add_element(novram_message, "NOVRAM", "NOVRAM Data", "empty")                                           
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            
 
                                             try:    
                                                 novram_message = add_element(novram_message, "err_id", "Error ID",Error_ID)
@@ -1776,7 +1782,7 @@ try:
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:        
-                                                novram_message = add_element(novram_message, "len", "length", str(len(novram_element)))
+                                                novram_message = add_element(novram_message, "len", "length", str(len(str(novram_element).split(" "))))
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
                                             try:    
@@ -1787,6 +1793,12 @@ try:
                                                 message_counter=send_json_message(mqtt_topic_novram, novram_message,message_counter)
                                             except Exception as e:                                                                                            
                                                 send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+                                            
+                                            try:
+                                                novram_message=add_element(novram_message, "additional_data", "additional data", str(novram_element))
+                                            except Exception as e:                                                   
+                                                send_text_message(mqtt_topic_debug, str(e)+" "+str(traceback.format_exc()))
+
                                             tag = "notag"
                                             day=time.strftime('%Y-%m-%d', time.localtime())
                                             send_string_to_ftp(ftp_host, ftp_user, ftp_password, message, "public_html/ETCSLoggerData/"+str(UIC_VehicleID)+"/"+day, str(int(time.time()))+"NOVRAM.txt")
